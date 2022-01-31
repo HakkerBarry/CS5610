@@ -71,7 +71,7 @@ int main(int argc, char** argv)
 
 	glutInitWindowPosition(100, 100);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-	glutCreateWindow("CS 5610 Project 1");
+	glutCreateWindow("CS 5610 Project 2");
 	setupFuncs();
 
 	// GLEW Init
@@ -93,34 +93,39 @@ int main(int argc, char** argv)
 
 	// Link as program
 	GLSLProgram prog;
+	prog.CreateProgram();
 	prog.AttachShader(vs);
 	prog.AttachShader(fs);
 	prog.Link();
 
 	// Set mvp
-	GLint mvp = glGetUniformLocation(prog.GetID(), "mvp");
 	prog.Bind();
-	GLfloat temp[] = {.05, 0, 0, 0, 0, .05, 0, 0, 0, 0, .05, 0, 0, 0, 0, 1};
-	glUniformMatrix4fv(mvp, 1, false, temp);
 
 	// set Vertex
 	int numVertex = obj.NV();
-	std::vector<Vec3<float>> vertices_buffer;
-	Vec3<float> vertices[1000];
-	for (int i = 0; i < numVertex; ++i) vertices[i] = obj.V(i);
+	Vec3<float> vertices[5000];
+	for (int i = 1; i < numVertex; ++i) {
+		vertices[i] = obj.V(i);
+	}
+
+	// Set mvp
+	prog.Bind();
+	GLint mvp = glGetUniformLocation(prog.GetID(), "mvp");
+	float temp[] = { .05, 0, 0, 0, 0, .05, 0, 0, 0, 0, .05, 0, 0, 0, 0, 1 };
+	glUniformMatrix4fv(mvp, 1, false, temp);
 	
 
 	// V buffer object
 	GLuint VBO;
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_buffer), &vertices_buffer, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glDrawArrays(GL_POINTS, 0, vertices_buffer.size());
+	glDrawArrays(GL_POINTS, 0, numVertex);
 
 	glutSwapBuffers();
 
