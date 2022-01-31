@@ -14,10 +14,8 @@ Zixuan Zhang A1 for CS5610 at the UofU
 
 using namespace cy;
 
-float color;
-bool colorFlag = false;
-
-
+bool isDraging;
+int prevX, prevY;
 
 void displayFunc()
 {
@@ -32,6 +30,21 @@ void keyboardFunc(unsigned char key, int x, int y)
 	case 27:
 		glutLeaveMainLoop();
 		break;
+	}
+}
+
+void mouseFunc(int button, int state, int x, int y){
+	if (button == GLUT_LEFT_BUTTON)
+	{
+		if (state == GLUT_DOWN) isDraging = true;
+		if (state == GLUT_UP) isDraging = false;
+	}
+}
+
+void motionFunc(int x, int y)
+{
+	if (isDraging) {
+
 	}
 }
 
@@ -60,6 +73,13 @@ void setupFuncs() {
 	glutKeyboardFunc(keyboardFunc);
 	glutSpecialFunc(specialFunc);
 	glutIdleFunc(idleFunc);
+	glutMouseFunc(mouseFunc);
+	glutMotionFunc(motionFunc);
+}
+
+void refresh() 
+{
+
 }
 
 int main(int argc, char** argv)
