@@ -1,5 +1,8 @@
-﻿  P2.cpp
-C:\Users\Zixuan\Documents\GitHub\CS5610\P2\P2.cpp(126,72): warning C4305: 'initializing': truncation from 'double' to 'float'
+﻿  ObjDrawer.cpp
+C:\Users\Zixuan\Documents\GitHub\CS5610\P2\ObjDrawer.cpp(59,66): warning C4305: 'initializing': truncation from 'double' to 'float'
+  P2.cpp
+C:\Users\Zixuan\Documents\GitHub\CS5610\P2\P2.cpp(124,17): warning C4305: '=': truncation from 'double' to 'float'
+  Generating Code...
   P2.vcxproj -> C:\Users\Zixuan\Documents\GitHub\CS5610\P2\Debug\P2.exe
   复制了 0 个文件
   复制了 0 个文件

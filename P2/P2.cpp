@@ -1,5 +1,5 @@
 /*
-Zixuan Zhang A1 for CS5610 at the UofU
+Zixuan Zhang A2 for CS5610 at the UofU
 */
 
 #include <glew.h>
@@ -10,18 +10,20 @@ Zixuan Zhang A1 for CS5610 at the UofU
 #include "cyTriMesh.h"
 #include "cyVector.h"
 #include "cyGL.h"
-#include <vector>
+#include "ObjDrawer.h"
 
 using namespace cy;
 
-bool isDraging;
+bool isLeftDraging, isRightDraging;
 int prevX, prevY;
+float rotationX, rotationY, rotationZ, viewScale, transZ;
+ObjDrawer *objDrawer;
 
 void displayFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-
-	//glutSwapBuffers();
+	objDrawer->drawV();
+	glutSwapBuffers();
 }
 
 void keyboardFunc(unsigned char key, int x, int y)
@@ -36,16 +38,48 @@ void keyboardFunc(unsigned char key, int x, int y)
 void mouseFunc(int button, int state, int x, int y){
 	if (button == GLUT_LEFT_BUTTON)
 	{
-		if (state == GLUT_DOWN) isDraging = true;
-		if (state == GLUT_UP) isDraging = false;
+		if (state == GLUT_DOWN) { 
+			isLeftDraging = true; 
+			prevX = x;
+			prevY = y;
+		}
+		if (state == GLUT_UP) {
+			isLeftDraging = false;
+		}
+	}
+
+	if (button == GLUT_RIGHT_BUTTON) {
+		if (state == GLUT_DOWN) {
+			isRightDraging = true;
+			prevX = x;
+			prevY = y;
+		}
+		if (state == GLUT_UP) {
+			isRightDraging = false;
+		}
 	}
 }
 
 void motionFunc(int x, int y)
 {
-	if (isDraging) {
+	int deltaX = x - prevX;
+	int deltaY = y - prevY;
 
+	if (isLeftDraging) {
+		rotationX += (float)deltaY/500;
+		rotationZ += (float)deltaX/500;
+		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 	}
+	else if(isRightDraging){
+		transZ += (float)deltaY / 500;
+		std::cout <<"TransZ: " << transZ << std::endl;
+		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+	}
+
+	prevX = x;
+	prevY = y;
+
+	displayFunc();
 }
 
 void specialFunc(int key, int x, int y) {
@@ -84,15 +118,21 @@ void refresh()
 
 int main(int argc, char** argv)
 {
+	rotationX = 0;
+	rotationY = 0;
+	rotationZ = 0;
+	viewScale = .05;
+	transZ = -2;
+	
 	//GLUT Init
 	glutInit(&argc, argv);
 
 	glutInitWindowSize(1920, 1080);
-
 	glutInitWindowPosition(100, 100);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutCreateWindow("CS 5610 Project 2");
 	setupFuncs();
+	glClearColor(0, 0, 0, 0);
 
 	// GLEW Init
 	GLenum res = glewInit();
@@ -103,49 +143,18 @@ int main(int argc, char** argv)
 	}
 
 	// Load Mesh
-	TriMesh obj;
-	obj.LoadFromFileObj("res/teapot.obj", false, &std::cout);
+	objDrawer = new ObjDrawer(argv[1], false);
 	
 	// Set up VS FS
-	GLSLShader vs, fs;
-	vs.CompileFile("SimpleVS.glsl", GL_VERTEX_SHADER);
-	fs.CompileFile("SimpleFS.glsl", GL_FRAGMENT_SHADER);
+	objDrawer->setVS("SimpleVS.glsl");
+	objDrawer->setFS("SimpleFS.glsl");
 
-	// Link as program
-	GLSLProgram prog;
-	prog.CreateProgram();
-	prog.AttachShader(vs);
-	prog.AttachShader(fs);
-	prog.Link();
 
 	// Set mvp
-	prog.Bind();
+	objDrawer->setAttrib("pos");
+	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 
-	// set Vertex
-	int numVertex = obj.NV();
-	Vec3<float> vertices[5000];
-	for (int i = 1; i < numVertex; ++i) {
-		vertices[i] = obj.V(i);
-	}
-
-	// Set mvp
-	prog.Bind();
-	GLint mvp = glGetUniformLocation(prog.GetID(), "mvp");
-	float temp[] = { .05, 0, 0, 0, 0, .05, 0, 0, 0, 0, .05, 0, 0, 0, 0, 1 };
-	glUniformMatrix4fv(mvp, 1, false, temp);
-	
-
-	// V buffer object
-	GLuint VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glDrawArrays(GL_POINTS, 0, numVertex);
+	objDrawer->drawV();
 
 	glutSwapBuffers();
 
