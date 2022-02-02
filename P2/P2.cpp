@@ -83,12 +83,16 @@ void motionFunc(int x, int y)
 }
 
 void specialFunc(int key, int x, int y) {
-
+	if (key == GLUT_KEY_F6) {
+		objDrawer->resetGLProg();
+		//objDrawer->setVS("SimpleVS.glsl");
+		//objDrawer->setFS("SimpleFS.glsl");
+	}
 }
 
 void idleFunc()
 {
-
+	
 }
 
 //void timerFunc(int t)
@@ -111,11 +115,6 @@ void setupFuncs() {
 	glutMotionFunc(motionFunc);
 }
 
-void refresh() 
-{
-
-}
-
 int main(int argc, char** argv)
 {
 	rotationX = 0;
@@ -127,7 +126,7 @@ int main(int argc, char** argv)
 	//GLUT Init
 	glutInit(&argc, argv);
 
-	glutInitWindowSize(1920, 1080);
+	glutInitWindowSize(1080, 1080);
 	glutInitWindowPosition(100, 100);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutCreateWindow("CS 5610 Project 2");

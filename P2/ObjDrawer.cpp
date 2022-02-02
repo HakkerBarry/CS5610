@@ -69,6 +69,12 @@ void ObjDrawer::setPerspect(bool isPerspect)
 	this->isPerspect = isPerspect;
 }
 
+void ObjDrawer::resetGLProg()
+{
+	prog.Bind();
+	glDeleteProgram(prog.GetID());
+}
+
 void ObjDrawer::sendMVP()
 {
 	prog.Bind();

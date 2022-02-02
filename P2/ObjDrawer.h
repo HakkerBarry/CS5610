@@ -33,6 +33,7 @@ public:
 	void setAttrib(char const* v);
 	void setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ);
 	void setPerspect(bool isPerspect);
+	void resetGLProg();
 };
 
 #endif
