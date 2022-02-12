@@ -17,8 +17,11 @@ private:
 	TriMesh obj;
 	GLSLShader vs, fs;
 	GLSLProgram prog;
+	// BUFFER
 	GLuint VBO;
 	GLuint tris;
+	GLuint NB;
+
 	GLint v_loc;
 	GLint f_loc;
 	Matrix4<float> mvp;

@@ -11,8 +11,10 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl): v_loc(-1), isPerspect(
 	
 	int v_num = obj.NV();
 	std::vector<Vec3<float>> vertices;
+	std::vector<Vec3<float>> normals;
 	for (int i = 0; i < v_num; ++i) {
 		vertices.push_back(obj.V(i));
+		normals.push_back(obj.VN(i));
 	}
 
 	int f_num = obj.NF();
@@ -28,9 +30,12 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl): v_loc(-1), isPerspect(
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(Vec3<float>), vertices.data(), GL_STATIC_DRAW);
-	glGenBuffers(2, &tris);
+	glGenBuffers(1, &tris);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tris);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, f_num * sizeof(TriMesh::TriFace), faces.data(), GL_STATIC_DRAW);
+	glGenBuffers(1, &NB);
+	glBindBuffer(GL_ARRAY_BUFFER, tris);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vec3<float>), normals.data(), GL_STATIC_DRAW);
 }
 
 void ObjDrawer::setCameraSize(int width, int height)
@@ -55,6 +60,7 @@ void ObjDrawer::setFS(char const* filename)
 void ObjDrawer::setAttrib(char const* v)
 {
 	v_loc = glGetAttribLocation(prog.GetID(), v);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glEnableVertexAttribArray(v_loc);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 }
