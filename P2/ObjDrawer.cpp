@@ -15,6 +15,10 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl): v_loc(-1), isPerspect(
 		vertices.push_back(obj.V(i));
 	}
 
+	GLuint VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(Vec3<float>), vertices.data(), GL_STATIC_DRAW);
