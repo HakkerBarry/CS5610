@@ -142,6 +142,8 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	//glEnable(GL_DEPTH_TEST);
+
 	// Load Mesh
 	objDrawer = new ObjDrawer(argv[1], false);
 
@@ -151,7 +153,7 @@ int main(int argc, char** argv)
 
 
 	// Set mvp
-	objDrawer->setAttrib("pos");
+	objDrawer->setAttrib("pos", "normal");
 	objDrawer->setCameraSize(width, height);
 	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 

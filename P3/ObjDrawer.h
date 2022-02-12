@@ -21,9 +21,11 @@ private:
 	GLuint VBO;
 	GLuint tris;
 	GLuint NB;
-
+	// attrib location
 	GLint v_loc;
 	GLint f_loc;
+	GLint n_loc;
+
 	Matrix4<float> mvp;
 	bool isPerspect;
 	float camerWidthScale;
@@ -36,7 +38,7 @@ public:
 	void setFS(char const* filename);
 	void drawV();
 	void drawTri();
-	void setAttrib(char const* v);
+	void setAttrib(char const* v, char const* n);
 	void setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ);
 	void setPerspect(bool isPerspect);
 	void resetGLProg();

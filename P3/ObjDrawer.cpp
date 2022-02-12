@@ -34,7 +34,7 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl): v_loc(-1), isPerspect(
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tris);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, f_num * sizeof(TriMesh::TriFace), faces.data(), GL_STATIC_DRAW);
 	glGenBuffers(1, &NB);
-	glBindBuffer(GL_ARRAY_BUFFER, tris);
+	glBindBuffer(GL_ARRAY_BUFFER, NB);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vec3<float>), normals.data(), GL_STATIC_DRAW);
 }
 
@@ -57,12 +57,17 @@ void ObjDrawer::setFS(char const* filename)
 	prog.Link();
 }
 
-void ObjDrawer::setAttrib(char const* v)
+void ObjDrawer::setAttrib(char const* v, char const* n)
 {
 	v_loc = glGetAttribLocation(prog.GetID(), v);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glEnableVertexAttribArray(v_loc);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(v_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	n_loc = glGetAttribLocation(prog.GetID(), n);
+	glBindBuffer(GL_ARRAY_BUFFER, NB);
+	glEnableVertexAttribArray(n_loc);
+	glVertexAttribPointer(n_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
 }
 
 void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ)
@@ -129,5 +134,6 @@ void ObjDrawer::drawV()
 void ObjDrawer::drawTri()
 {
 	prog.Bind();
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tris);
 	glDrawElements(GL_TRIANGLES, obj.NF() * sizeof(TriMesh::TriFace), GL_UNSIGNED_INT, 0);
 }
