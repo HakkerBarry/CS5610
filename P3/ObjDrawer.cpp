@@ -72,6 +72,12 @@ void ObjDrawer::setAttrib(char const* v, char const* n)
 
 void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ)
 {
+	//mvp.SetRotationX(rotateX);
+	//mvp.SetRotationY(rotateY);
+	//mvp.SetRotationZ(rotateZ);
+	//mvp.SetScale(scale);
+	//mvp.SetTranslation(Vec3f(0, 0, transformZ));
+
 	float rx[] = { 1, 0, 0, 0, 0, cos(rotateX), sin(rotateX), 0, 0, -sin(rotateX), cos(rotateX), 0, 0, 0, 0, 1 };
 	Matrix4<float> m_rotateX(rx);
 
@@ -91,6 +97,12 @@ void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, 
 	Matrix4<float> m_trans2(t2);
 
 	mvp = m_trans * m_rotateX * m_rotateY * m_rotateZ * m_trans2 * m_scale ;
+
+	GLint mvp_pos = glGetUniformLocation(prog.GetID(), "n_mv");
+	Matrix4<float> m_orth = m_rotateX * m_rotateY * m_rotateZ * m_scale;
+	float sending[16];
+	m_orth.Get(sending);
+	glUniformMatrix4fv(mvp_pos, 1, false, sending);
 
 	sendMVP();
 }
@@ -112,11 +124,16 @@ void ObjDrawer::sendMVP()
 	GLint mvp_pos = glGetUniformLocation(prog.GetID(), "mvp");
 	float sending[16];
 
-	Matrix4<float> m_orth({ 1 / camerWidthScale, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1 });
+	// 2/(r - l)  0				0				-(r + l)/(r - l)
+	//0				2/(t-b)		0				-(t + b)/(r - l)
+	//0				0			2/(n - f)		-(n + f)/(n - f)
+	//0				0			0
+	Matrix4<float> m_orth({ 1.f / camerWidthScale, 0, 0, 0, 0, 1.f, 0, 0, 0, 0, 1.f/100, 0, 0, 0, 0, 1. });
 
 	if (isPerspect) {
-		Matrix4<float> m_pres({ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0 });
-		(m_pres * m_orth * mvp).Get(sending);
+		Matrix4f m_pres = Matrix4f::Perspective(1.6f, camerWidthScale, 0.1f, 100.f);
+		//Matrix4<float> m_pres({ -1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0 });
+		( m_pres * mvp).Get(sending);
 	}
 	else {
 		mvp.Get(sending);

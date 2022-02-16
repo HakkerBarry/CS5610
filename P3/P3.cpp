@@ -21,7 +21,7 @@ ObjDrawer* objDrawer;
 
 void displayFunc()
 {
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	objDrawer->drawTri();
 	glutSwapBuffers();
 }
@@ -72,7 +72,6 @@ void motionFunc(int x, int y)
 	}
 	else if (isRightDraging) {
 		transZ += (float)deltaY / 500;
-		std::cout << "TransZ: " << transZ << std::endl;
 		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 	}
 
@@ -85,8 +84,6 @@ void motionFunc(int x, int y)
 void specialFunc(int key, int x, int y) {
 	if (key == GLUT_KEY_F6) {
 		objDrawer->resetGLProg();
-		//objDrawer->setVS("SimpleVS.glsl");
-		//objDrawer->setFS("SimpleFS.glsl");
 	}
 }
 
@@ -142,7 +139,8 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	//glEnable(GL_DEPTH_TEST);
+	glutInitContextVersion(4, 5);
+	glEnable(GL_DEPTH_TEST);
 
 	// Load Mesh
 	objDrawer = new ObjDrawer(argv[1], false);
