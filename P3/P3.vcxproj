@@ -107,8 +107,8 @@
       <AdditionalDependencies>OpenGL32.lib;freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y /d "$(SolutionDir)\..\libs\freeglut\bin\freeglut.dll" "$(OutDir)"
-xcopy /y /d "$(SolutionDir)\..\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(OutDir)"</Command>
+      <Command>xcopy /y /d "$(SolutionDir)\libs\freeglut\bin\freeglut.dll" "$(OutDir)"
+xcopy /y /d "$(SolutionDir)\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -128,8 +128,8 @@ xcopy /y /d "$(SolutionDir)\..\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(
       <AdditionalDependencies>OpenGL32.lib;freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y /d "$(SolutionDir)\..\libs\freeglut\bin\freeglut.dll" "$(OutDir)"
-xcopy /y /d "$(SolutionDir)\..\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(OutDir)"</Command>
+      <Command>xcopy /y /d "$(SolutionDir)\libs\freeglut\bin\freeglut.dll" "$(OutDir)"
+xcopy /y /d "$(SolutionDir)\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -145,8 +145,8 @@ xcopy /y /d "$(SolutionDir)\..\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(
       <AdditionalDependencies>OpenGL32.lib;freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y /d "$(SolutionDir)\..\libs\freeglut\bin\freeglut.dll" "$(OutDir)"
-xcopy /y /d "$(SolutionDir)\..\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(OutDir)"</Command>
+      <Command>xcopy /y /d "$(SolutionDir)\libs\freeglut\bin\freeglut.dll" "$(OutDir)"
+xcopy /y /d "$(SolutionDir)\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -166,8 +166,8 @@ xcopy /y /d "$(SolutionDir)\..\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(
       <AdditionalDependencies>OpenGL32.lib;freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y /d "$(SolutionDir)\..\libs\freeglut\bin\freeglut.dll" "$(OutDir)"
-xcopy /y /d "$(SolutionDir)\..\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(OutDir)"</Command>
+      <Command>xcopy /y /d "$(SolutionDir)\libs\freeglut\bin\freeglut.dll" "$(OutDir)"
+xcopy /y /d "$(SolutionDir)\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
