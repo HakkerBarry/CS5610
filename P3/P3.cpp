@@ -154,9 +154,10 @@ int main(int argc, char** argv)
 	objDrawer->setAttrib("pos", "normal");
 	objDrawer->setCameraSize(width, height);
 	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	objDrawer->drawTri();
-
 	glutSwapBuffers();
 
 	glutMainLoop();

@@ -104,6 +104,16 @@ void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, 
 	m_orth.Get(sending);
 	glUniformMatrix4fv(mvp_pos, 1, false, sending);
 
+	GLint cam_pos = glGetUniformLocation(prog.GetID(), "cam_dir");
+	Vec4f cam = mvp.Column(2);
+	float camera[4];
+	cam.Get(camera);
+	glUniform4fv(cam_pos, 1, camera);
+
+	GLint light_pos = glGetUniformLocation(prog.GetID(), "light_dir");
+	float l[3] = { 1, 1, 1 };
+	glUniform3fv(light_pos, 1, l);
+
 	sendMVP();
 }
 
