@@ -1,5 +1,2 @@
-﻿  main.cpp
-C:\Users\Zixuan\Documents\GitHub\CS5610\P1\A1\main.cpp(41,30): warning C4305: '-=': truncation from 'double' to 'float'
-C:\Users\Zixuan\Documents\GitHub\CS5610\P1\A1\main.cpp(42,20): warning C4305: '+=': truncation from 'double' to 'float'
-  A1.vcxproj -> C:\Users\Zixuan\Documents\GitHub\CS5610\P1\Debug\A1.exe
+﻿  A1.vcxproj -> C:\Users\Zixuan\Documents\GitHub\CS5610\P1\Debug\A1.exe
   复制了 0 个文件

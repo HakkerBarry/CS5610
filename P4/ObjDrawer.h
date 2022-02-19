@@ -25,13 +25,15 @@ private:
 	GLint v_loc;
 	GLint f_loc;
 	GLint n_loc;
+	// texture
+	GLuint tex;
 
 	Matrix4<float> mvp;
 	bool isPerspect;
 	float camerWidthScale;
-	
+
 	void sendMVP();
-	
+
 public:
 	ObjDrawer(char const* filename, bool loadMtl);
 	void setVS(char const* filename);

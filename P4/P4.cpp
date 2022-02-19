@@ -1,20 +1,170 @@
-// P4.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+/*
+Zixuan Zhang A2 for CS5610 at the UofU
+*/
 
-#include <iostream>
+#include <glew.h>
+#include<GL/freeglut.h>
+#include<GL/gl.h>
+#include <GL/glu.h>
+#include <stdio.h>
+#include "cyTriMesh.h"
+#include "cyVector.h"
+#include "cyGL.h"
+#include "ObjDrawer.h"
 
-int main()
+using namespace cy;
+
+bool isLeftDraging, isRightDraging;
+int prevX, prevY;
+float rotationX, rotationY, rotationZ, viewScale, transZ;
+ObjDrawer* objDrawer;
+
+void displayFunc()
 {
-    std::cout << "Hello World!\n";
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	objDrawer->drawTri();
+	glutSwapBuffers();
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
+void keyboardFunc(unsigned char key, int x, int y)
+{
+	switch (key) {
+	case 27:
+		glutLeaveMainLoop();
+		break;
+	}
+}
 
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
+void mouseFunc(int button, int state, int x, int y) {
+	if (button == GLUT_LEFT_BUTTON)
+	{
+		if (state == GLUT_DOWN) {
+			isLeftDraging = true;
+			prevX = x;
+			prevY = y;
+		}
+		if (state == GLUT_UP) {
+			isLeftDraging = false;
+		}
+	}
+
+	if (button == GLUT_RIGHT_BUTTON) {
+		if (state == GLUT_DOWN) {
+			isRightDraging = true;
+			prevX = x;
+			prevY = y;
+		}
+		if (state == GLUT_UP) {
+			isRightDraging = false;
+		}
+	}
+}
+
+void motionFunc(int x, int y)
+{
+	int deltaX = x - prevX;
+	int deltaY = y - prevY;
+
+	if (isLeftDraging) {
+		rotationX += (float)deltaY / 500;
+		rotationZ += (float)deltaX / 500;
+		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+	}
+	else if (isRightDraging) {
+		transZ += (float)deltaY / 500;
+		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+	}
+
+	prevX = x;
+	prevY = y;
+
+	displayFunc();
+}
+
+void specialFunc(int key, int x, int y) {
+	if (key == GLUT_KEY_F6) {
+		objDrawer->resetGLProg();
+	}
+}
+
+void idleFunc()
+{
+
+}
+
+//void timerFunc(int t)
+//{
+//	glClearColor(0, color, color, 1);
+//	if (colorFlag) color -= 0.03;
+//	else color += 0.03;
+//	if (color > 1) colorFlag = true;
+//	else if (color < 0) colorFlag = false;
+//	glutPostRedisplay();
+//	glutTimerFunc(50, timerFunc, 0);
+//}
+
+void setupFuncs() {
+	glutDisplayFunc(displayFunc);
+	glutKeyboardFunc(keyboardFunc);
+	glutSpecialFunc(specialFunc);
+	glutIdleFunc(idleFunc);
+	glutMouseFunc(mouseFunc);
+	glutMotionFunc(motionFunc);
+}
+
+int main(int argc, char** argv)
+{
+	rotationX = 0;
+	rotationY = 0;
+	rotationZ = 0;
+	viewScale = .05;
+	transZ = -2;
+	int width = 1920;
+	int height = 1080;
+	//GLUT Init
+	glutInit(&argc, argv);
+
+	glutInitWindowSize(1920, 1080);
+	glutInitWindowPosition(100, 100);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+	glutCreateWindow("CS 5610 Project 2");
+	setupFuncs();
+	glClearColor(0, 0, 0, 0);
+
+	// GLEW Init
+	GLenum res = glewInit();
+	if (res != GLEW_OK)
+	{
+		fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
+		return 1;
+	}
+
+	glutInitContextVersion(4, 5);
+	glEnable(GL_DEPTH_TEST);
+
+	// Load Mesh
+	objDrawer = new ObjDrawer(argv[1], true);
+
+	// Set up VS FS
+	objDrawer->setVS("SimpleVS.glsl");
+	objDrawer->setFS("SimpleFS.glsl");
+
+
+	// Set mvp
+	objDrawer->setAttrib("pos", "normal");
+	objDrawer->setCameraSize(width, height);
+	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	objDrawer->drawTri();
+	glutSwapBuffers();
+
+	glutMainLoop();
+
+	return 0;
+}
+
+
+
+//Screen constants
