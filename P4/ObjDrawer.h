@@ -21,10 +21,12 @@ private:
 	GLuint VBO;
 	GLuint tris;
 	GLuint NB;
+	GLuint TCB;
 	// attrib location
 	GLint v_loc;
 	GLint f_loc;
 	GLint n_loc;
+	GLint tc_loc;
 	// texture
 	GLuint tex;
 

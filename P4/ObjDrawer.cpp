@@ -17,9 +17,11 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1), isPerspect
 	int v_num = obj.NV();
 	std::vector<Vec3<float>> vertices;
 	std::vector<Vec3<float>> normals;
+	std::vector<Vec2<float>> texC;
 	for (int i = 0; i < v_num; ++i) {
 		vertices.push_back(obj.V(i));
 		normals.push_back(obj.VN(i));
+		texC.push_back(Vec2<float>(obj.VT(i).x, obj.VT(i).y));
 	}
 
 	int f_num = obj.NF();
@@ -40,7 +42,10 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1), isPerspect
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, f_num * sizeof(TriMesh::TriFace), faces.data(), GL_STATIC_DRAW);
 	glGenBuffers(1, &NB);
 	glBindBuffer(GL_ARRAY_BUFFER, NB);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vec3<float>), normals.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(Vec3<float>), normals.data(), GL_STATIC_DRAW);
+	glGenBuffers(1, &TCB);
+	glBindBuffer(GL_ARRAY_BUFFER, TCB);
+	glBufferData(GL_ARRAY_BUFFER, texC.size() * sizeof(Vec2<float>), texC.data(), GL_STATIC_DRAW);
 
 
 	// texture
@@ -56,6 +61,8 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1), isPerspect
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, tex);
 
@@ -94,6 +101,11 @@ void ObjDrawer::setAttrib(char const* v, char const* n)
 	glBindBuffer(GL_ARRAY_BUFFER, NB);
 	glEnableVertexAttribArray(n_loc);
 	glVertexAttribPointer(n_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	tc_loc = glGetAttribLocation(prog.GetID(), "texc");
+	glBindBuffer(GL_ARRAY_BUFFER, TCB);
+	glEnableVertexAttribArray(tc_loc);
+	glVertexAttribPointer(tc_loc, 2, GL_FLOAT, GL_FALSE, 0, 0);
 }
 
 void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ)
