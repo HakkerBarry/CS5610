@@ -2,6 +2,10 @@
 #include "cyVector.h"
 #include "ObjDrawer.h"
 #include <cmath>
+#include "lodepng.h"
+#include <string>
+
+//debug
 #include <iostream>
 
 ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1), isPerspect(true)
@@ -38,10 +42,26 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1), isPerspect
 	glBindBuffer(GL_ARRAY_BUFFER, NB);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vec3<float>), normals.data(), GL_STATIC_DRAW);
 
+
+	// texture
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
-	std::cout << obj.M(0).map_Kd << std::endl;
-	//glTexImage2D();
+	std::vector<unsigned char> image; //the raw pixels
+	unsigned width, height;
+
+	//decode
+	unsigned error = lodepng::decode(image, width, height, "res/" + std::string(obj.M(0).map_Kd.data));
+	if (error) std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)image.data());
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, tex);
+
+	GLuint sampler = glGetUniformLocation(prog.GetID(), "texc");
+	glUseProgram(prog.GetID());
+	glUniform1i(sampler, 0);
 }
 
 void ObjDrawer::setCameraSize(int width, int height)
