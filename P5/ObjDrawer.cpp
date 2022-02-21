@@ -18,11 +18,6 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1), isPerspect
 	std::vector<Vec3<float>> vertices;
 	std::vector<Vec3<float>> normals;
 	std::vector<Vec2<float>> texC;
-	//for (int i = 0; i < v_num; ++i) {
-	//	vertices.push_back(obj.V(i));
-	//	normals.push_back(obj.VN(i));
-	//	texC.push_back(Vec2<float>(obj.VT(i).x, obj.VT(i).y));
-	//}
 
 	int f_num = obj.NF();
 	for (int i = 0; i < f_num; ++i) {
@@ -36,6 +31,8 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1), isPerspect
 		texC.push_back(Vec2<float>(obj.GetTexCoord(i, Vec3f(0, 1, 0))));
 		texC.push_back(Vec2<float>(obj.GetTexCoord(i, Vec3f(0, 0, 1))));
 	}
+
+	glUseProgram(prog.GetID());
 
 	GLuint VAO;
 	glGenVertexArrays(1, &VAO);
@@ -58,18 +55,22 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1), isPerspect
 	std::vector<unsigned char> image; //the raw pixels
 	unsigned width, height;
 
-	//decode
-	unsigned error = lodepng::decode(image, width, height, "res/" + std::string(obj.M(0).map_Kd.data));
-	if (error) std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)image.data());
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, tex);
+	if (loadMtl) {
+		unsigned error = lodepng::decode(image, width, height, "res/" + std::string(obj.M(0).map_Kd.data));
+		if (error) std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)image.data());
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, tex);
 
+		GLuint sampler = glGetUniformLocation(prog.GetID(), "texc");
+		glUseProgram(prog.GetID());
+		glUniform1i(sampler, 0);
+	}
 	GLuint sampler = glGetUniformLocation(prog.GetID(), "texc");
 	glUseProgram(prog.GetID());
 	glUniform1i(sampler, 0);
@@ -94,17 +95,20 @@ void ObjDrawer::setFS(char const* filename)
 	prog.Link();
 }
 
-void ObjDrawer::setAttrib(char const* v, char const* n)
+void ObjDrawer::setAttrib(char const* v, bool hasN)
 {
+	glUseProgram(prog.GetID());
 	v_loc = glGetAttribLocation(prog.GetID(), v);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glEnableVertexAttribArray(v_loc);
 	glVertexAttribPointer(v_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	n_loc = glGetAttribLocation(prog.GetID(), n);
-	glBindBuffer(GL_ARRAY_BUFFER, NB);
-	glEnableVertexAttribArray(n_loc);
-	glVertexAttribPointer(n_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	if (hasN) {
+		n_loc = glGetAttribLocation(prog.GetID(), "normal");
+		glBindBuffer(GL_ARRAY_BUFFER, NB);
+		glEnableVertexAttribArray(n_loc);
+		glVertexAttribPointer(n_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	}
 
 	tc_loc = glGetAttribLocation(prog.GetID(), "texc");
 	glBindBuffer(GL_ARRAY_BUFFER, TCB);
@@ -114,6 +118,7 @@ void ObjDrawer::setAttrib(char const* v, char const* n)
 
 void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ)
 {
+	glUseProgram(prog.GetID());
 
 	float rx[] = { 1, 0, 0, 0, 0, cos(rotateX), sin(rotateX), 0, 0, -sin(rotateX), cos(rotateX), 0, 0, 0, 0, 1 };
 	Matrix4<float> m_rotateX(rx);
