@@ -20,14 +20,20 @@ int prevX, prevY;
 float rotationX, rotationY, rotationZ, viewScale, transZ;
 ObjDrawer* objDrawer;
 TriMesh plane;
+GLSLProgram planeP;
 
 GLuint frameBuffer = 0;
 GLint origFB = 0;
 
 void displayFunc()
 {
-	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, origFB);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	objDrawer->drawTri();
+	glutSwapBuffers();
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, origFB);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	planeP.Bind();
 	objDrawer->drawTri();
 	glutSwapBuffers();
 }
@@ -107,6 +113,36 @@ void setupFuncs() {
 	glutMotionFunc(motionFunc);
 }
 
+float* getMVP(float rotateX, float rotateY, float rotateZ, float scale, float transformZ)
+{
+	float rx[] = { 1, 0, 0, 0, 0, cos(rotateX), sin(rotateX), 0, 0, -sin(rotateX), cos(rotateX), 0, 0, 0, 0, 1 };
+	Matrix4<float> m_rotateX(rx);
+
+	float ry[] = { cos(rotateY), 0, -sin(rotateY), 0, 0, 1, 0, 0, sin(rotateY), 0, cos(rotateY), 0, 0, 0, 0, 1 };
+	Matrix4<float> m_rotateY(ry);
+
+	float rz[] = { cos(rotateZ), sin(rotateZ), 0, 0, -sin(rotateZ), cos(rotateZ), 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
+	Matrix4<float> m_rotateZ(rz);
+
+	float s[] = { scale, 0, 0, 0, 0, scale, 0, 0, 0, 0, scale, 0, 0, 0, 0, 1 };
+	Matrix4<float> m_scale(s);
+
+	float t[] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, transformZ, 1 };
+	Matrix4<float> m_trans(t);
+
+	float t2[] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, -.3, 1 };
+	Matrix4<float> m_trans2(t2);
+
+	Matrix4f mvp = m_trans * m_rotateX * m_rotateY * m_rotateZ * m_trans2 * m_scale;
+
+	float sending[16];
+	Matrix4f m_pres = Matrix4f::Perspective(1.6f, 1, 0.1f, 100.f);
+	(m_pres * mvp).Get(sending);
+
+	return sending;
+}
+
+
 int main(int argc, char** argv)
 {
 	rotationX = 0;
@@ -182,9 +218,8 @@ int main(int argc, char** argv)
 
 	// Init plane shader
 	GLSLShader p_vs, p_fs;
-	GLSLProgram planeP;
 	p_vs.CompileFile("SceneVS.glsl", GL_VERTEX_SHADER);
-	p_fs.CompileFile("SceneVS.glsl", GL_FRAGMENT_SHADER);
+	p_fs.CompileFile("SceneFS.glsl", GL_FRAGMENT_SHADER);
 	planeP.AttachShader(p_vs);
 	planeP.AttachShader(p_fs);
 	planeP.Link();
@@ -227,7 +262,10 @@ int main(int argc, char** argv)
 	glEnableVertexAttribArray(p_texC_loc);
 	glVertexAttribPointer(p_texC_loc, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, origFB);
+	GLuint p_mvp_loc = glGetUniformLocation(planeP.GetID(), "mvp");
+	glUniformMatrix4fv(p_mvp_loc, 1, false, getMVP(rotationX, rotationY, rotationZ, viewScale, transZ));
+
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 	displayFunc();
 
 	glutMainLoop();

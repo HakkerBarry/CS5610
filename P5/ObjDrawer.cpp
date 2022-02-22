@@ -176,10 +176,6 @@ void ObjDrawer::sendMVP()
 	GLint mvp_pos = glGetUniformLocation(prog.GetID(), "mvp");
 	float sending[16];
 
-	// 2/(r - l)  0				0				-(r + l)/(r - l)
-	//0				2/(t-b)		0				-(t + b)/(r - l)
-	//0				0			2/(n - f)		-(n + f)/(n - f)
-	//0				0			0
 	Matrix4<float> m_orth({ 1.f / camerWidthScale, 0, 0, 0, 0, 1.f, 0, 0, 0, 0, 1.f / 100, 0, 0, 0, 0, 1. });
 
 	if (isPerspect) {

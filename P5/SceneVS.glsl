@@ -1,5 +1,5 @@
 #version 330 core
-layout (location = 0) in vec3 pos;
+in vec3 pos;
 in vec2 texc;
 
 out vec2 texCoord;
