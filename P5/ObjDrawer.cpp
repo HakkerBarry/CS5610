@@ -95,20 +95,13 @@ void ObjDrawer::setFS(char const* filename)
 	prog.Link();
 }
 
-void ObjDrawer::setAttrib(char const* v, bool hasN)
+void ObjDrawer::setAttrib(char const* v)
 {
 	glUseProgram(prog.GetID());
 	v_loc = glGetAttribLocation(prog.GetID(), v);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glEnableVertexAttribArray(v_loc);
 	glVertexAttribPointer(v_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	if (hasN) {
-		n_loc = glGetAttribLocation(prog.GetID(), "normal");
-		glBindBuffer(GL_ARRAY_BUFFER, NB);
-		glEnableVertexAttribArray(n_loc);
-		glVertexAttribPointer(n_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	}
 
 	tc_loc = glGetAttribLocation(prog.GetID(), "texc");
 	glBindBuffer(GL_ARRAY_BUFFER, TCB);
@@ -139,22 +132,6 @@ void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, 
 	Matrix4<float> m_trans2(t2);
 
 	mvp = m_trans * m_rotateX * m_rotateY * m_rotateZ * m_trans2 * m_scale;
-
-	GLint mvp_pos = glGetUniformLocation(prog.GetID(), "n_mv");
-	Matrix4<float> m_orth = m_rotateX * m_rotateY * m_rotateZ * m_scale;
-	float sending[16];
-	m_orth.Get(sending);
-	glUniformMatrix4fv(mvp_pos, 1, false, sending);
-
-	GLint cam_pos = glGetUniformLocation(prog.GetID(), "cam_dir");
-	Vec4f cam = mvp.Column(2);
-	float camera[4];
-	cam.Get(camera);
-	glUniform4fv(cam_pos, 1, camera);
-
-	GLint light_pos = glGetUniformLocation(prog.GetID(), "light_dir");
-	float l[3] = { 1, 1, 1 };
-	glUniform3fv(light_pos, 1, l);
 
 	sendMVP();
 }
@@ -199,7 +176,7 @@ void ObjDrawer::drawV()
 void ObjDrawer::drawTri()
 {
 	prog.Bind();
-	/*glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tris);*/
-	//glDrawElements(GL_TRIANGLES, obj.NF() * sizeof(TriMesh::TriFace), GL_UNSIGNED_INT, 0);
+	glEnableVertexAttribArray(v_loc);
+	glEnableVertexAttribArray(tc_loc);
 	glDrawArrays(GL_TRIANGLES, 0, obj.NF() * 3 * sizeof(Vec3f));
 }

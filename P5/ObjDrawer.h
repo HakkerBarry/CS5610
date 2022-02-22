@@ -42,7 +42,7 @@ public:
 	void setFS(char const* filename);
 	void drawV();
 	void drawTri();
-	void setAttrib(char const* v, bool hasN);
+	void setAttrib(char const* v);
 	void setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ);
 	void setPerspect(bool isPerspect);
 	void resetGLProg();

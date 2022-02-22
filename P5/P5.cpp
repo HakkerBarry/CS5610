@@ -27,14 +27,17 @@ GLint origFB = 0;
 
 void displayFunc()
 {
+	/*glClearColor(.5, .5, .5, 1);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	objDrawer->drawTri();
-	glutSwapBuffers();
+	glutSwapBuffers();*/
+
+	glClearColor(0, 0, 0, 0);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, origFB);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	planeP.Bind();
-	objDrawer->drawTri();
+	glDrawArrays(GL_TRIANGLES, 0, 50000);
 	glutSwapBuffers();
 }
 
@@ -160,7 +163,7 @@ int main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutCreateWindow("CS 5610 Project 5");
 	setupFuncs();
-	glClearColor(0, 0, 0, 0);
+	
 
 	// GLEW Init
 	GLenum res = glewInit();
@@ -174,6 +177,7 @@ int main(int argc, char** argv)
 	glEnable(GL_DEPTH_TEST);
 
 	// Load Mesh
+	glActiveTexture(GL_TEXTURE0);
 	objDrawer = new ObjDrawer(argv[1], true);
 
 	// Set up VS FS
@@ -181,7 +185,7 @@ int main(int argc, char** argv)
 	objDrawer->setFS("SimpleFS.glsl");
 
 	// Set mvp
-	objDrawer->setAttrib("pos", true);
+	objDrawer->setAttrib("pos");
 	objDrawer->setCameraSize(width, height);
 	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 
@@ -264,6 +268,8 @@ int main(int argc, char** argv)
 
 	GLuint p_mvp_loc = glGetUniformLocation(planeP.GetID(), "mvp");
 	glUniformMatrix4fv(p_mvp_loc, 1, false, getMVP(rotationX, rotationY, rotationZ, viewScale, transZ));
+	GLuint p_tex_loc = glGetUniformLocation(planeP.GetID(), "tex");
+	glUniform1i(p_tex_loc, 1);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 	displayFunc();
