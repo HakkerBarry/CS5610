@@ -18,6 +18,7 @@ private:
 	GLSLShader vs, fs;
 	GLSLProgram prog;
 	// BUFFER
+	GLuint VAO;
 	GLuint VBO;
 	GLuint tris;
 	GLuint NB;
@@ -47,6 +48,7 @@ public:
 	void setPerspect(bool isPerspect);
 	void resetGLProg();
 	void setCameraSize(int width, int height);
+	void setTexUnit(GLint u);
 };
 
 #endif

@@ -18,26 +18,30 @@ using namespace cy;
 bool isLeftDraging, isRightDraging;
 int prevX, prevY;
 float rotationX, rotationY, rotationZ, viewScale, transZ;
+float p_rotationX, p_rotationY, p_rotationZ, p_viewScale, p_transZ;
+int p_prevX, p_prevY;
 ObjDrawer* objDrawer;
-TriMesh plane;
-GLSLProgram planeP;
+ObjDrawer* planeDrawer;
 
 GLuint frameBuffer = 0;
 GLint origFB = 0;
 
+GLuint rendTexture;
+
 void displayFunc()
 {
-	/*glClearColor(.5, .5, .5, 1);
+	glClearColor(.3, .3, .3, 1);
+	glViewport(0, 0, 1024, 1024);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	objDrawer->drawTri();
-	glutSwapBuffers();*/
 
+	glViewport(0, 0, 1920, 1080);
 	glClearColor(0, 0, 0, 0);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, origFB);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	planeP.Bind();
-	glDrawArrays(GL_TRIANGLES, 0, 50000);
+	glBindTexture(GL_TEXTURE_2D, rendTexture);
+	planeDrawer->drawTri();
 	glutSwapBuffers();
 }
 
@@ -54,6 +58,11 @@ void mouseFunc(int button, int state, int x, int y) {
 	if (button == GLUT_LEFT_BUTTON)
 	{
 		if (state == GLUT_DOWN) {
+			if (glutGetModifiers() == GLUT_ACTIVE_ALT) {
+				isLeftDraging = true;
+				p_prevX = x;
+				p_prevY = y;
+			}
 			isLeftDraging = true;
 			prevX = x;
 			prevY = y;
@@ -65,6 +74,11 @@ void mouseFunc(int button, int state, int x, int y) {
 
 	if (button == GLUT_RIGHT_BUTTON) {
 		if (state == GLUT_DOWN) {
+			if (glutGetModifiers() == GLUT_ACTIVE_ALT) {
+				isRightDraging = true;
+				p_prevX = x;
+				p_prevY = y;
+			}
 			isRightDraging = true;
 			prevX = x;
 			prevY = y;
@@ -80,18 +94,37 @@ void motionFunc(int x, int y)
 	int deltaX = x - prevX;
 	int deltaY = y - prevY;
 
+	int p_deltaX = x - p_prevX;
+	int p_deltaY = y - p_prevY;
+
 	if (isLeftDraging) {
-		rotationX += (float)deltaY / 500;
-		rotationZ += (float)deltaX / 500;
-		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+		if (glutGetModifiers() == GLUT_ACTIVE_ALT) {
+			p_rotationX += (float)p_deltaY / 500;
+			p_rotationZ += (float)p_deltaX / 500;
+			planeDrawer->setMV(p_rotationX, p_rotationY, p_rotationZ, p_viewScale, p_transZ);
+		}
+		else {
+			rotationX += (float)deltaY / 500;
+			rotationZ += (float)deltaX / 500;
+			objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+		}
 	}
 	else if (isRightDraging) {
-		transZ += (float)deltaY / 500;
-		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+		if (glutGetModifiers() == GLUT_ACTIVE_ALT) {
+			p_transZ += (float)p_deltaY / 500;
+			planeDrawer->setMV(p_rotationX, p_rotationY, p_rotationZ, p_viewScale, p_transZ);
+		}
+		else {
+			transZ += (float)deltaY / 500;
+			objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+		}
 	}
 
 	prevX = x;
 	prevY = y;
+
+	p_prevX = x;
+	p_prevY = y;
 
 	displayFunc();
 }
@@ -148,11 +181,20 @@ float* getMVP(float rotateX, float rotateY, float rotateZ, float scale, float tr
 
 int main(int argc, char** argv)
 {
+	// teapot
 	rotationX = 0;
 	rotationY = 0;
 	rotationZ = 0;
 	viewScale = .05;
 	transZ = -2;
+
+	// plane
+	p_rotationX = -90;
+	p_rotationY = 0;
+	p_rotationZ = 0;
+	p_viewScale = .05;
+	p_transZ = -2;
+
 	int width = 1920;
 	int height = 1080;
 	//GLUT Init
@@ -186,8 +228,18 @@ int main(int argc, char** argv)
 
 	// Set mvp
 	objDrawer->setAttrib("pos");
-	objDrawer->setCameraSize(width, height);
+	objDrawer->setCameraSize(1024, 1024);
 	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+
+	glActiveTexture(GL_TEXTURE1);
+	// Plane setup
+	planeDrawer = new ObjDrawer("res/plane.obj", false);
+	planeDrawer->setVS("SceneVS.glsl");
+	planeDrawer->setFS("SceneFS.glsl");
+
+	planeDrawer->setAttrib("pos");
+	planeDrawer->setCameraSize(width, height);
+	planeDrawer->setMV(p_rotationX, p_rotationY, p_rotationZ, p_viewScale, p_transZ);
 
 	// get origFrameBuffer
 	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFB);
@@ -197,9 +249,8 @@ int main(int argc, char** argv)
 	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 
 	// Gen Texture
-	GLuint rendTexture;
-	glGenTextures(1, &rendTexture);
 	glActiveTexture(GL_TEXTURE1);
+	glGenTextures(1, &rendTexture);
 	glBindTexture(GL_TEXTURE_2D, rendTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1024, 1024, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -220,58 +271,8 @@ int main(int argc, char** argv)
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "Frame Buffer not complete" << std::endl;
 
-	// Init plane shader
-	GLSLShader p_vs, p_fs;
-	p_vs.CompileFile("SceneVS.glsl", GL_VERTEX_SHADER);
-	p_fs.CompileFile("SceneFS.glsl", GL_FRAGMENT_SHADER);
-	planeP.AttachShader(p_vs);
-	planeP.AttachShader(p_fs);
-	planeP.Link();
+	planeDrawer->setTexUnit(1);
 
-	// Load plane
-	std::vector<Vec3<float>> planeV;
-	std::vector<Vec2<float>> p_texC;
-	int f_num = plane.NF();
-	plane.LoadFromFileObj("res/plane.obj", true);
-	
-	for (int i = 0; i < f_num; ++i) {
-		planeV.push_back(plane.V(plane.F(i).v[0]));
-		planeV.push_back(plane.V(plane.F(i).v[1]));
-		planeV.push_back(plane.V(plane.F(i).v[2]));
-		p_texC.push_back(Vec2<float>(plane.GetTexCoord(i, Vec3f(1, 0, 0))));
-		p_texC.push_back(Vec2<float>(plane.GetTexCoord(i, Vec3f(0, 1, 0))));
-		p_texC.push_back(Vec2<float>(plane.GetTexCoord(i, Vec3f(0, 0, 1))));
-	}
-
-	// plane vertex
-	GLuint PlaneV;
-	glGenBuffers(1, &PlaneV);
-	glBindBuffer(GL_ARRAY_BUFFER, PlaneV);
-	glBufferData(GL_ARRAY_BUFFER, planeV.size() * sizeof(Vec3<float>), planeV.data(), GL_STATIC_DRAW);
-
-	// plane tex Coord
-	GLuint PlaneTexC;
-	glGenBuffers(1, &PlaneTexC);
-	glBindBuffer(GL_ARRAY_BUFFER, PlaneTexC);
-	glBufferData(GL_ARRAY_BUFFER, p_texC.size() * sizeof(Vec2<float>), p_texC.data(), GL_STATIC_DRAW);
-
-	//buffer plane data
-	glUseProgram(planeP.GetID());
-	GLuint p_v_loc = glGetAttribLocation(planeP.GetID(), "pos");
-	glBindBuffer(GL_ARRAY_BUFFER, PlaneV);
-	glEnableVertexAttribArray(p_v_loc);
-	glVertexAttribPointer(p_v_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	GLuint p_texC_loc = glGetAttribLocation(planeP.GetID(), "texc");
-	glBindBuffer(GL_ARRAY_BUFFER, PlaneTexC);
-	glEnableVertexAttribArray(p_texC_loc);
-	glVertexAttribPointer(p_texC_loc, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-	GLuint p_mvp_loc = glGetUniformLocation(planeP.GetID(), "mvp");
-	glUniformMatrix4fv(p_mvp_loc, 1, false, getMVP(rotationX, rotationY, rotationZ, viewScale, transZ));
-	GLuint p_tex_loc = glGetUniformLocation(planeP.GetID(), "tex");
-	glUniform1i(p_tex_loc, 1);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 	displayFunc();
 
 	glutMainLoop();

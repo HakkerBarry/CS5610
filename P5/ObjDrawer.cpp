@@ -16,7 +16,6 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1), isPerspect
 
 	int v_num = obj.NV();
 	std::vector<Vec3<float>> vertices;
-	std::vector<Vec3<float>> normals;
 	std::vector<Vec2<float>> texC;
 
 	int f_num = obj.NF();
@@ -24,9 +23,6 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1), isPerspect
 		vertices.push_back(obj.V(obj.F(i).v[0]));
 		vertices.push_back(obj.V(obj.F(i).v[1]));
 		vertices.push_back(obj.V(obj.F(i).v[2]));
-		normals.push_back(obj.VN(obj.F(i).v[0]));
-		normals.push_back(obj.VN(obj.F(i).v[1]));
-		normals.push_back(obj.VN(obj.F(i).v[2]));
 		texC.push_back(Vec2<float>(obj.GetTexCoord(i, Vec3f(1, 0, 0))));
 		texC.push_back(Vec2<float>(obj.GetTexCoord(i, Vec3f(0, 1, 0))));
 		texC.push_back(Vec2<float>(obj.GetTexCoord(i, Vec3f(0, 0, 1))));
@@ -34,28 +30,23 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1), isPerspect
 
 	glUseProgram(prog.GetID());
 
-	GLuint VAO;
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vec3<float>), vertices.data(), GL_STATIC_DRAW);
-	glGenBuffers(1, &NB);
-	glBindBuffer(GL_ARRAY_BUFFER, NB);
-	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(Vec3<float>), normals.data(), GL_STATIC_DRAW);
 	glGenBuffers(1, &TCB);
 	glBindBuffer(GL_ARRAY_BUFFER, TCB);
 	glBufferData(GL_ARRAY_BUFFER, texC.size() * sizeof(Vec2<float>), texC.data(), GL_STATIC_DRAW);
 
-
-	// texture
-	glGenTextures(1, &tex);
-	glBindTexture(GL_TEXTURE_2D, tex);
-	std::vector<unsigned char> image; //the raw pixels
-	unsigned width, height;
-
 	if (loadMtl) {
+		// texture
+		glGenTextures(1, &tex);
+		glBindTexture(GL_TEXTURE_2D, tex);
+		std::vector<unsigned char> image; //the raw pixels
+		unsigned width, height;
+
 		unsigned error = lodepng::decode(image, width, height, "res/" + std::string(obj.M(0).map_Kd.data));
 		if (error) std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)image.data());
@@ -64,21 +55,24 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1), isPerspect
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, tex);
 
 		GLuint sampler = glGetUniformLocation(prog.GetID(), "texc");
 		glUseProgram(prog.GetID());
 		glUniform1i(sampler, 0);
 	}
-	GLuint sampler = glGetUniformLocation(prog.GetID(), "texc");
-	glUseProgram(prog.GetID());
-	glUniform1i(sampler, 0);
 }
 
 void ObjDrawer::setCameraSize(int width, int height)
 {
 	camerWidthScale = ((float)width) / ((float)height);
+}
+
+void ObjDrawer::setTexUnit(GLint u)
+{
+	glUseProgram(prog.GetID());
+	GLuint sampler = glGetUniformLocation(prog.GetID(), "tex");
+	glUniform1i(sampler, u);
 }
 
 void ObjDrawer::setVS(char const* filename)
@@ -176,7 +170,10 @@ void ObjDrawer::drawV()
 void ObjDrawer::drawTri()
 {
 	prog.Bind();
+	glBindVertexArray(VAO);
 	glEnableVertexAttribArray(v_loc);
 	glEnableVertexAttribArray(tc_loc);
 	glDrawArrays(GL_TRIANGLES, 0, obj.NF() * 3 * sizeof(Vec3f));
+	glDisableVertexAttribArray(v_loc);
+	glDisableVertexAttribArray(tc_loc);
 }
