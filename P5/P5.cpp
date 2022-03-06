@@ -203,7 +203,7 @@ int main(int argc, char** argv)
 	glutInitWindowSize(width, height);
 	glutInitWindowPosition(100, 100);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-	glutCreateWindow("CS 5610 Project 5");
+	glutCreateWindow("CS 5610 Project 6");
 	setupFuncs();
 	
 
