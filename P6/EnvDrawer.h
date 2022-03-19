@@ -16,16 +16,22 @@ class EnvDrawer
 	GLSLShader vs, fs;
 	GLSLProgram prog;
 
-	//vertex
+	//Buffer Objects
 	GLuint VAO;
 	GLuint VBO;
-	GLuint TCB;
 
-	GLuint texID[6];
+	// Attrib location
+	GLint v_loc;
+	GLint mvp_loc;
+
+	// Texture
+	GLuint texID;
 
 public:
-	EnvDrawer(char const* filename);
+	EnvDrawer(char const* filename, char const* vs, char const* fs);
+	void setMVP(float rotateX, float rotateY, float rotateZ);
 	void drawEnv();
+	GLuint getEnvTex();
 };
 
 #endif

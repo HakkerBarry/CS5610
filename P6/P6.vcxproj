@@ -183,6 +183,12 @@ xcopy /y /d "$(SolutionDir)\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(Out
     <ClInclude Include="lodepng.h" />
     <ClInclude Include="ObjDrawer.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="EnvFS.glsl" />
+    <None Include="EnvObjFS.glsl" />
+    <None Include="EnvObjVS.glsl" />
+    <None Include="EnvVS.glsl" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

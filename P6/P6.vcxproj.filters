@@ -57,4 +57,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="EnvVS.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="EnvFS.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="EnvObjVS.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="EnvObjFS.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

@@ -22,12 +22,10 @@ private:
 	GLuint VBO;
 	GLuint tris;
 	GLuint NB;
-	GLuint TCB;
 	// attrib location
 	GLint v_loc;
 	GLint f_loc;
 	GLint n_loc;
-	GLint tc_loc;
 	// texture
 	GLuint tex;
 
@@ -35,19 +33,15 @@ private:
 	bool isPerspect;
 	float camerWidthScale;
 
-	void sendMVP();
-
 public:
 	ObjDrawer(char const* filename, bool loadMtl);
-	void setVS(char const* filename);
-	void setFS(char const* filename);
+	void setShader(char const* vs_path, char const* fs_path);
 	void drawV();
 	void drawTri();
-	void setAttrib(char const* v);
+	void setAttrib(GLuint envTex);
 	void setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ);
 	void setPerspect(bool isPerspect);
 	void resetGLProg();
-	void setCameraSize(int width, int height);
 	void setTexUnit(GLint u);
 };
 
