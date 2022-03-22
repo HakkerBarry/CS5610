@@ -14,6 +14,8 @@ void main()
     vec4 reflect = texture(env, reflect(w_camera_dir,w_normal));
     vec4 blinn = vec4(vec3(1, 1, 1) * pow(dot(half, v_normal), 20), 0.);
 
+    color = vec4(w_camera_dir,1);
+
     color = vec4(max(reflect[0], blinn[0]),
     max(reflect[1], blinn[1]),
     max(reflect[2], blinn[2]),

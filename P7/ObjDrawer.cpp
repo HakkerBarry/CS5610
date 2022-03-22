@@ -5,7 +5,6 @@
 #include "lodepng.h"
 #include <string>
 
-//debug
 #include <iostream>
 
 ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1)
@@ -80,7 +79,7 @@ void ObjDrawer::setShader(char const* vs_path, char const* fs_path)
 	prog.Link();
 }
 
-void ObjDrawer::setAttrib(GLuint envTex)
+void ObjDrawer::setAttrib()
 {
 	glUseProgram(prog.GetID());
 	v_loc = glGetAttribLocation(prog.GetID(), "VertexPos");
@@ -92,11 +91,6 @@ void ObjDrawer::setAttrib(GLuint envTex)
 	glBindBuffer(GL_ARRAY_BUFFER, NB);
 	glEnableVertexAttribArray(n_loc);
 	glVertexAttribPointer(n_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, envTex);
-	GLuint sampler = glGetUniformLocation(prog.GetID(), "env");
-	glUniform1i(sampler, 0);
 }
 
 void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ)
@@ -130,18 +124,25 @@ void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, 
 	float m_sending[16];
 	m.Get(m_sending);
 
-
-	GLint m_pos = glGetUniformLocation(prog.GetID(), "m");
-	glUniformMatrix4fv(m_pos, 1, false, m_sending);
-
 	GLint mv_pos = glGetUniformLocation(prog.GetID(), "mv");
 	glUniformMatrix4fv(mv_pos, 1, false, mv_sending);
 
-	GLint v_pos = glGetUniformLocation(prog.GetID(), "v");
-	glUniformMatrix4fv(v_pos, 1, false, v_sending);
-
 	GLint mvp_pos = glGetUniformLocation(prog.GetID(), "mvp");
 	glUniformMatrix4fv(mvp_pos, 1, false, sending);
+}
+
+void ObjDrawer::setMVP(Matrix4<float> m, Matrix4<float> v, Matrix4<float> p)
+{
+	Matrix4<float> m_model;
+	m_model.SetRotationX(-1.57f);
+	Matrix4<float> mvp = p * v * m_model;
+	float mvp_sending[16];
+	mvp.Get(mvp_sending);
+	GLint mvp_pos = glGetUniformLocation(prog.GetID(), "mvp");
+	glUniformMatrix4fv(mvp_pos, 1, false, mvp_sending);
+
+	for(int i = 0; i < 16; i++)
+		std::cout << mvp_sending[i] <<" ";
 }
 
 
@@ -164,8 +165,6 @@ void ObjDrawer::drawTri()
 	glUseProgram(prog.GetID());
 	glBindVertexArray(VAO);
 	glEnableVertexAttribArray(v_loc);
-	glEnableVertexAttribArray(n_loc);
 	glDrawArrays(GL_TRIANGLES, 0, obj.NF() * 3 * sizeof(Vec3f));
 	glDisableVertexAttribArray(v_loc);
-	glDisableVertexAttribArray(n_loc);
 }

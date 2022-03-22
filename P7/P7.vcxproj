@@ -167,11 +167,14 @@ xcopy /y /d "$(SolutionDir)\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(Out
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="lodepng.cpp" />
     <ClCompile Include="ObjDrawer.cpp" />
     <ClCompile Include="P7.cpp" />
+    <ClCompile Include="ShadowMapDrawer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="cyCore.h" />
     <ClInclude Include="cyGL.h" />
     <ClInclude Include="cyIVector.h" />
@@ -179,6 +182,12 @@ xcopy /y /d "$(SolutionDir)\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(Out
     <ClInclude Include="cyTriMesh.h" />
     <ClInclude Include="cyVector.h" />
     <ClInclude Include="lodepng.h" />
+    <ClInclude Include="ObjDrawer.h" />
+    <ClInclude Include="ShadowMapDrawer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="regularFS.glsl" />
+    <None Include="regularVS.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

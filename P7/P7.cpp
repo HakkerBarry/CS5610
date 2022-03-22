@@ -12,6 +12,7 @@ Zixuan Zhang A5 for CS5610 at the UofU
 #include "cyGL.h"
 #include "ObjDrawer.h"
 #include <vector>
+#include "Camera.h"
 
 using namespace cy;
 
@@ -21,6 +22,7 @@ float rotationX, rotationY, rotationZ, viewScale, transZ;
 float p_rotationX, p_rotationY, p_rotationZ, p_viewScale, p_transZ;
 int p_prevX, p_prevY;
 ObjDrawer* objDrawer;
+Camera camera;
 
 GLuint frameBuffer = 0;
 GLint origFB = 0;
@@ -29,7 +31,7 @@ GLuint rendTexture;
 
 void displayFunc()
 {
-	glClearColor(0, 0, 1, 1);
+	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	objDrawer->drawTri();
 	glutSwapBuffers();
@@ -78,6 +80,7 @@ void motionFunc(int x, int y)
 		rotationY -= (float)deltaX / 500;
 		rotationX -= (float)deltaY / 500;
 		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+		//objDrawer->setMVP(Matrix4<float>(), camera.getView(), camera.getPerspective());
 	}
 	else if (isRightDraging) {
 		transZ += (float)deltaY / 500;
@@ -148,9 +151,20 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	// GL enable
 	glutInitContextVersion(4, 5);
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
+	camera.setPosition(Vec3f(0, 0, 30));
+	camera.setTarget(Vec3f(0, 0, 0));
+	
+
+	objDrawer = new ObjDrawer(argv[1], false);
+	objDrawer->setShader("regularVS.glsl", "regularFS.glsl");
+	objDrawer->setMV(1.144, -0.5, 0, 0.05, -0.8);
+	//objDrawer->setMVP(Matrix4<float>(), camera.getView(), camera.getPerspective());
+	objDrawer->setAttrib();
+
 
 	glutMainLoop();
 }

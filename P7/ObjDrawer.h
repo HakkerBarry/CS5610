@@ -24,8 +24,8 @@ private:
 	GLuint NB;
 	// attrib location
 	GLint v_loc;
-	GLint f_loc;
 	GLint n_loc;
+
 	// texture
 	GLuint tex;
 
@@ -37,8 +37,9 @@ public:
 	void setShader(char const* vs_path, char const* fs_path);
 	void drawV();
 	void drawTri();
-	void setAttrib(GLuint envTex);
+	void setAttrib();
 	void setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ);
+	void setMVP(Matrix4<float> m, Matrix4<float>v, Matrix4<float>p);
 	void resetGLProg();
 	void setTexUnit(GLint u);
 };
