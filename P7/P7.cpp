@@ -23,7 +23,10 @@ float p_rotationX, p_rotationY, p_rotationZ, p_viewScale, p_transZ;
 int p_prevX, p_prevY;
 ObjDrawer* objDrawer;
 ObjDrawer* planeDrawer;
-Camera camera;
+
+GLSLProgram p_prog;
+GLSLProgram t_prog;
+GLuint depth_prog;
 
 GLuint frameBuffer = 0;
 GLint origFB = 0;
@@ -34,26 +37,33 @@ void displayFunc()
 {
 	// Draw Depth Buffer
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer);
-	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer);
 	glViewport(0, 0, 1024, 1024);
 	glClear(GL_DEPTH_BUFFER_BIT);
+	//objDrawer->setProg(depth_prog);
+	//planeDrawer->setProg(depth_prog);
 	objDrawer->setCameraSize(1024, 1024);
 	planeDrawer->setCameraSize(1024, 1024);
-	objDrawer->setMV(0.957999647, -0.318000615, 0, 0.05, 1.95399976);
+	Matrix4<float> MLP = objDrawer->setMV(0.957999647, -0.318000615, 0, 0.05, 1.95399976);
 	planeDrawer->setMV(0.957999647, -0.318000615, 0, 0.05, 1.95399976);
 	objDrawer->drawTri();
 	planeDrawer->drawTri();
 
-	/*glBindFramebuffer(GL_DRAW_FRAMEBUFFER, origFB);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, origFB);
 	glViewport(0, 0, 1920, 1080);
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	objDrawer->setProg(t_prog.GetID());
+	planeDrawer->setProg(p_prog.GetID());
 	objDrawer->setCameraSize(1920, 1080);
 	planeDrawer->setCameraSize(1920, 1080);
 	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 	planeDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+
+	float mlp[16];
+	MLP.Get(mlp);
+	planeDrawer->setMLP(mlp);
 	objDrawer->drawTri();
-	planeDrawer->drawTri();*/
+	planeDrawer->drawTri();
 
 
 	glutSwapBuffers();
@@ -102,7 +112,6 @@ void motionFunc(int x, int y)
 		rotationY -= (float)deltaX / 500;
 		rotationX -= (float)deltaY / 500;
 		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
-		//objDrawer->setMVP(Matrix4<float>(), camera.getView(), camera.getPerspective());
 		planeDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 	}
 	else if (isRightDraging) {
@@ -158,6 +167,8 @@ int main(int argc, char** argv)
 	int height = 1080;
 	//GLUT Init
 	glutInit(&argc, argv);
+	glutInitContextVersion(4, 5);
+	glutInitContextProfile(GLUT_CORE_PROFILE);
 
 	glutInitWindowSize(width, height);
 	glutInitWindowPosition(100, 100);
@@ -165,7 +176,6 @@ int main(int argc, char** argv)
 	glutCreateWindow("CS 5610 Project 7");
 	glViewport(0, 0, 1920, 1080);
 	setupFuncs();
-
 
 	// GLEW Init
 	GLenum res = glewInit();
@@ -176,9 +186,6 @@ int main(int argc, char** argv)
 	}
 
 	// GL enable
-	glutInitContextVersion(4, 5);
-	glutInitContextProfile(GLUT_CORE_PROFILE);
-
 	glEnable(GL_DEPTH_TEST);
 	glActiveTexture(GL_TEXTURE0);
 
@@ -198,28 +205,48 @@ int main(int argc, char** argv)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
 	// config frame buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-	//glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 1024);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthMap, 0);
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "Frame Buffer not complete" << std::endl;
 
+	// Teapot shader
+	t_prog.CreateProgram();
+	GLSLShader t_vs, t_fs;
+	t_vs.CompileFile("regularVS.glsl", GL_VERTEX_SHADER);
+	t_fs.CompileFile("regularFS.glsl", GL_FRAGMENT_SHADER);
+	t_prog.AttachShader(t_vs);
+	t_prog.AttachShader(t_fs);
+	t_prog.Link();
+
+	// Plane shader
+	p_prog.CreateProgram();
+	GLSLShader p_vs, p_fs;
+	p_vs.CompileFile("planeVS.glsl", GL_VERTEX_SHADER);
+	p_fs.CompileFile("planeFS.glsl", GL_FRAGMENT_SHADER);
+	p_prog.AttachShader(p_vs);
+	p_prog.AttachShader(p_fs);
+	p_prog.Link();
+
+	//depth map shader
+	depth_prog = glCreateProgram();
 
 	//Teapot
 	objDrawer = new ObjDrawer(argv[1], false);
-	objDrawer->setShader("regularVS.glsl", "regularFS.glsl");
+	objDrawer->setProg(t_prog.GetID());
 	objDrawer->setAttrib();
 
 	//plane
 	planeDrawer = new ObjDrawer("res/plane.obj", false);
-	planeDrawer->setShader("planeVS.glsl", "planeFS.glsl");
+	planeDrawer->setTexUnit(0);
+	planeDrawer->setProg(p_prog.GetID());
 	planeDrawer->setAttribPlane();
-
-
 
 	glutMainLoop();
 }

@@ -76,5 +76,11 @@
     <None Include="planeFS.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="depthVS.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="depthFS.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

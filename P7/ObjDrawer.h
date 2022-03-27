@@ -16,15 +16,19 @@ class ObjDrawer
 private:
 	TriMesh obj;
 	GLSLShader vs, fs;
-	GLSLProgram prog;
+	GLuint prog_id;
+
 	// BUFFER
 	GLuint VAO;
 	GLuint VBO;
 	GLuint tris;
 	GLuint NB;
+	GLuint TCB;
+	
 	// attrib location
 	GLint v_loc;
 	GLint n_loc;
+	GLint tc_loc;
 
 	// texture
 	GLuint tex;
@@ -34,14 +38,14 @@ private:
 
 public:
 	ObjDrawer(char const* filename, bool loadMtl);
-	void setShader(char const* vs_path, char const* fs_path);
+	void setProg(GLuint prog);
 	void drawV();
 	void drawTri();
 	void setAttrib();
 	void setAttribPlane();
 	void setCameraSize(int width, int height);
-	void setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ);
-	void setMVP(Matrix4<float> m, Matrix4<float>v, Matrix4<float>p);
+	Matrix4<float> setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ);
+	void setMLP(float* MLP);
 	void resetGLProg();
 	void setTexUnit(GLint u);
 };

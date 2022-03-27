@@ -10,7 +10,6 @@
 ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1)
 {
 	obj.LoadFromFileObj(filename, loadMtl);
-	prog.CreateProgram();
 
 
 	int v_num = obj.NV();
@@ -26,9 +25,11 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1)
 		normals.push_back(obj.VN(obj.F(i).v[0]));
 		normals.push_back(obj.VN(obj.F(i).v[1]));
 		normals.push_back(obj.VN(obj.F(i).v[2]));
+		texC.push_back(Vec2<float>(obj.GetTexCoord(i, Vec3f(1, 0, 0))));
+		texC.push_back(Vec2<float>(obj.GetTexCoord(i, Vec3f(0, 1, 0))));
+		texC.push_back(Vec2<float>(obj.GetTexCoord(i, Vec3f(0, 0, 1))));
 	}
 
-	glUseProgram(prog.GetID());
 
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
@@ -39,55 +40,32 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1)
 	glGenBuffers(1, &NB);
 	glBindBuffer(GL_ARRAY_BUFFER, NB);
 	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(Vec3<float>), normals.data(), GL_STATIC_DRAW);
-
-	if (loadMtl) {
-		// texture
-		glGenTextures(1, &tex);
-		glBindTexture(GL_TEXTURE_2D, tex);
-		std::vector<unsigned char> image; //the raw pixels
-		unsigned width, height;
-
-		unsigned error = lodepng::decode(image, width, height, "res/" + std::string(obj.M(0).map_Kd.data));
-		if (error) std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)image.data());
-		glGenerateMipmap(GL_TEXTURE_2D);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glBindTexture(GL_TEXTURE_2D, tex);
-
-		GLuint sampler = glGetUniformLocation(prog.GetID(), "texc");
-		glUseProgram(prog.GetID());
-		glUniform1i(sampler, 0);
-	}
+	glGenBuffers(1, &TCB);
+	glBindBuffer(GL_ARRAY_BUFFER, TCB);
+	glBufferData(GL_ARRAY_BUFFER, texC.size() * sizeof(Vec2<float>), texC.data(), GL_STATIC_DRAW);
 }
 
 void ObjDrawer::setTexUnit(GLint u)
 {
-	glUseProgram(prog.GetID());
-	GLuint sampler = glGetUniformLocation(prog.GetID(), "tex");
+	glUseProgram(prog_id);
+	GLuint sampler = glGetUniformLocation(prog_id, "tex");
 	glUniform1i(sampler, u);
 }
 
-void ObjDrawer::setShader(char const* vs_path, char const* fs_path)
+void ObjDrawer::setProg(GLuint prog)
 {
-	vs.CompileFile(vs_path, GL_VERTEX_SHADER);
-	fs.CompileFile(fs_path, GL_FRAGMENT_SHADER);
-	prog.AttachShader(vs);
-	prog.AttachShader(fs);
-	prog.Link();
+	prog_id = prog;
 }
 
 void ObjDrawer::setAttrib()
 {
-	glUseProgram(prog.GetID());
-	v_loc = glGetAttribLocation(prog.GetID(), "VertexPos");
+	glUseProgram(prog_id);
+	v_loc = glGetAttribLocation(prog_id, "VertexPos");
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glEnableVertexAttribArray(v_loc);
 	glVertexAttribPointer(v_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	n_loc = glGetAttribLocation(prog.GetID(), "VertexNormal");
+	n_loc = glGetAttribLocation(prog_id, "VertexNormal");
 	glBindBuffer(GL_ARRAY_BUFFER, NB);
 	glEnableVertexAttribArray(n_loc);
 	glVertexAttribPointer(n_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -95,11 +73,16 @@ void ObjDrawer::setAttrib()
 
 void ObjDrawer::setAttribPlane()
 {
-	glUseProgram(prog.GetID());
-	v_loc = glGetAttribLocation(prog.GetID(), "pos");
+	glUseProgram(prog_id);
+	v_loc = glGetAttribLocation(prog_id, "pos");
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glEnableVertexAttribArray(v_loc);
 	glVertexAttribPointer(v_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	tc_loc = glGetAttribLocation(prog_id, "texc");
+	glBindBuffer(GL_ARRAY_BUFFER, TCB);
+	glEnableVertexAttribArray(tc_loc);
+	glVertexAttribPointer(tc_loc, 2, GL_FLOAT, GL_FALSE, 0, 0);
 }
 
 void ObjDrawer::setCameraSize(int width, int height)
@@ -107,9 +90,9 @@ void ObjDrawer::setCameraSize(int width, int height)
 	camerWidthScale = ((float)width) / ((float)height);
 }
 
-void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ)
+Matrix4<float> ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ)
 {
-	glUseProgram(prog.GetID());
+	glUseProgram(prog_id);
 
 	Matrix4<float> m_model;
 	m_model.SetRotationX(-1.57f);
@@ -120,7 +103,7 @@ void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, 
 	m_view = v_trans * m_view;
 
 	Matrix4<float> m_pres;
-	m_pres.SetPerspective(1.f, camerWidthScale, 0.1f, 100.f);
+	m_pres.SetPerspective(1.f, camerWidthScale, 0.1f, 1000.f);
 
 	Matrix4<float> mv = m_view * m_model;
 	Matrix4<float> v = m_view;
@@ -138,45 +121,43 @@ void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, 
 	float m_sending[16];
 	m.Get(m_sending);
 
-	GLint mv_pos = glGetUniformLocation(prog.GetID(), "mv");
+	GLint mv_pos = glGetUniformLocation(prog_id, "mv");
 	glUniformMatrix4fv(mv_pos, 1, false, mv_sending);
 
-	GLint mvp_pos = glGetUniformLocation(prog.GetID(), "mvp");
+	GLint mvp_pos = glGetUniformLocation(prog_id, "mvp");
 	glUniformMatrix4fv(mvp_pos, 1, false, sending);
+
+	Matrix4<float> shadow_scale;
+	shadow_scale.SetScale(0.5);
+	Matrix4<float> shadow_trans;
+	shadow_scale.SetTranslation(Vec3f(0.5, 0.5, 0.5));
+	return shadow_trans * shadow_scale * mvp;
 }
 
-void ObjDrawer::setMVP(Matrix4<float> m, Matrix4<float> v, Matrix4<float> p)
+void ObjDrawer::setMLP(float* MLP)
 {
-	Matrix4<float> m_model;
-	m_model.SetRotationX(-1.57f);
-	Matrix4<float> mvp = p * v * m_model;
-	float mvp_sending[16];
-	mvp.Get(mvp_sending);
-	GLint mvp_pos = glGetUniformLocation(prog.GetID(), "mvp");
-	glUniformMatrix4fv(mvp_pos, 1, false, mvp_sending);
-
-	for(int i = 0; i < 16; i++)
-		std::cout << mvp_sending[i] <<" ";
+	GLint mlp_pos = glGetUniformLocation(prog_id, "mlp");
+	glUniformMatrix4fv(mlp_pos, 1, false, MLP);
 }
 
 
 void ObjDrawer::resetGLProg()
 {
-	prog.Bind();
-	glDeleteProgram(prog.GetID());
+	glUseProgram(prog_id);
+	glDeleteProgram(prog_id);
 }
 
 
 
 void ObjDrawer::drawV()
 {
-	prog.Bind();
+	glUseProgram(prog_id);
 	glDrawArrays(GL_POINTS, 0, obj.NV());
 }
 
 void ObjDrawer::drawTri()
 {
-	glUseProgram(prog.GetID());
+	glUseProgram(prog_id);
 	glBindVertexArray(VAO);
 	glEnableVertexAttribArray(v_loc);
 	glDrawArrays(GL_TRIANGLES, 0, obj.NF() * 3 * sizeof(Vec3f));
