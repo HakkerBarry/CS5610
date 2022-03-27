@@ -186,6 +186,8 @@ xcopy /y /d "$(SolutionDir)\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(Out
     <ClInclude Include="ShadowMapDrawer.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="planeFS.glsl" />
+    <None Include="planeVS.glsl" />
     <None Include="regularFS.glsl" />
     <None Include="regularVS.glsl" />
   </ItemGroup>

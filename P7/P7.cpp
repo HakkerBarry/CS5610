@@ -22,6 +22,7 @@ float rotationX, rotationY, rotationZ, viewScale, transZ;
 float p_rotationX, p_rotationY, p_rotationZ, p_viewScale, p_transZ;
 int p_prevX, p_prevY;
 ObjDrawer* objDrawer;
+ObjDrawer* planeDrawer;
 Camera camera;
 
 GLuint frameBuffer = 0;
@@ -31,9 +32,30 @@ GLuint rendTexture;
 
 void displayFunc()
 {
+	// Draw Depth Buffer
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer);
+	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer);
+	glViewport(0, 0, 1024, 1024);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	objDrawer->setCameraSize(1024, 1024);
+	planeDrawer->setCameraSize(1024, 1024);
+	objDrawer->setMV(0.957999647, -0.318000615, 0, 0.05, 1.95399976);
+	planeDrawer->setMV(0.957999647, -0.318000615, 0, 0.05, 1.95399976);
+	objDrawer->drawTri();
+	planeDrawer->drawTri();
+
+	/*glBindFramebuffer(GL_DRAW_FRAMEBUFFER, origFB);
+	glViewport(0, 0, 1920, 1080);
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	objDrawer->setCameraSize(1920, 1080);
+	planeDrawer->setCameraSize(1920, 1080);
+	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+	planeDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 	objDrawer->drawTri();
+	planeDrawer->drawTri();*/
+
+
 	glutSwapBuffers();
 }
 
@@ -81,10 +103,12 @@ void motionFunc(int x, int y)
 		rotationX -= (float)deltaY / 500;
 		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 		//objDrawer->setMVP(Matrix4<float>(), camera.getView(), camera.getPerspective());
+		planeDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 	}
 	else if (isRightDraging) {
 		transZ += (float)deltaY / 500;
 		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+		planeDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 	}
 
 	prevX = x;
@@ -153,17 +177,48 @@ int main(int argc, char** argv)
 
 	// GL enable
 	glutInitContextVersion(4, 5);
+	glutInitContextProfile(GLUT_CORE_PROFILE);
+
 	glEnable(GL_DEPTH_TEST);
+	glActiveTexture(GL_TEXTURE0);
 
-	camera.setPosition(Vec3f(0, 0, 30));
-	camera.setTarget(Vec3f(0, 0, 0));
-	
+	// Gen depth buffer
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFB);
+	GLuint depthBuffer;
+	glGenRenderbuffers(1, &depthBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 1024);
+	glGenFramebuffers(1, &frameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 
+	// depth map
+	GLuint depthMap;
+	glGenTextures(1, &depthMap);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	// config frame buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+	//glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 1024);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthMap, 0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Frame Buffer not complete" << std::endl;
+
+
+	//Teapot
 	objDrawer = new ObjDrawer(argv[1], false);
 	objDrawer->setShader("regularVS.glsl", "regularFS.glsl");
-	objDrawer->setMV(1.144, -0.5, 0, 0.05, -0.8);
-	//objDrawer->setMVP(Matrix4<float>(), camera.getView(), camera.getPerspective());
 	objDrawer->setAttrib();
+
+	//plane
+	planeDrawer = new ObjDrawer("res/plane.obj", false);
+	planeDrawer->setShader("planeVS.glsl", "planeFS.glsl");
+	planeDrawer->setAttribPlane();
+
 
 
 	glutMainLoop();

@@ -93,6 +93,20 @@ void ObjDrawer::setAttrib()
 	glVertexAttribPointer(n_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
 }
 
+void ObjDrawer::setAttribPlane()
+{
+	glUseProgram(prog.GetID());
+	v_loc = glGetAttribLocation(prog.GetID(), "pos");
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glEnableVertexAttribArray(v_loc);
+	glVertexAttribPointer(v_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
+}
+
+void ObjDrawer::setCameraSize(int width, int height)
+{
+	camerWidthScale = ((float)width) / ((float)height);
+}
+
 void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ)
 {
 	glUseProgram(prog.GetID());
@@ -106,7 +120,7 @@ void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, 
 	m_view = v_trans * m_view;
 
 	Matrix4<float> m_pres;
-	m_pres.SetPerspective(1.f, 1920. / 1080., 0.1f, 100.f);
+	m_pres.SetPerspective(1.f, camerWidthScale, 0.1f, 100.f);
 
 	Matrix4<float> mv = m_view * m_model;
 	Matrix4<float> v = m_view;

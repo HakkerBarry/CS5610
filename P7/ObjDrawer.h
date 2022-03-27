@@ -38,6 +38,8 @@ public:
 	void drawV();
 	void drawTri();
 	void setAttrib();
+	void setAttribPlane();
+	void setCameraSize(int width, int height);
 	void setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ);
 	void setMVP(Matrix4<float> m, Matrix4<float>v, Matrix4<float>p);
 	void resetGLProg();
