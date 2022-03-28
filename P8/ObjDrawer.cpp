@@ -11,8 +11,6 @@
 ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1), isPerspect(true)
 {
 	obj.LoadFromFileObj(filename, loadMtl);
-	prog.CreateProgram();
-
 
 	int v_num = obj.NV();
 	std::vector<Vec3<float>> vertices;
@@ -53,7 +51,7 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1), isPerspect
 		bitangent.push_back(bitan);
 	}
 
-	glUseProgram(prog.GetID());
+	glUseProgram(progID);
 
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
@@ -77,44 +75,40 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1), isPerspect
 
 void ObjDrawer::setTexUnit(GLint u)
 {
-	glUseProgram(prog.GetID());
-	GLuint sampler = glGetUniformLocation(prog.GetID(), "tex");
+	glUseProgram(progID);
+	GLuint sampler = glGetUniformLocation(progID, "tex");
 	glUniform1i(sampler, u);
 }
 
-void ObjDrawer::setShader(char const* vs_path, char const* fs_path)
+void ObjDrawer::setProg(GLuint prog_id)
 {
-	vs.CompileFile(vs_path, GL_VERTEX_SHADER);
-	fs.CompileFile(fs_path, GL_FRAGMENT_SHADER);
-	prog.AttachShader(vs);
-	prog.AttachShader(fs);
-	prog.Link();
+	progID = prog_id;
 }
 
 void ObjDrawer::setAttrib()
 {
-	glUseProgram(prog.GetID());
-	v_loc = glGetAttribLocation(prog.GetID(), "m_pos");
+	glUseProgram(progID);
+	v_loc = glGetAttribLocation(progID, "m_pos");
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glEnableVertexAttribArray(v_loc);
 	glVertexAttribPointer(v_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	tc_loc = glGetAttribLocation(prog.GetID(), "texc");
+	tc_loc = glGetAttribLocation(progID, "texc");
 	glBindBuffer(GL_ARRAY_BUFFER, TCB);
 	glEnableVertexAttribArray(tc_loc);
 	glVertexAttribPointer(tc_loc, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-	n_loc = glGetAttribLocation(prog.GetID(), "m_normal");
+	n_loc = glGetAttribLocation(progID, "m_normal");
 	glBindBuffer(GL_ARRAY_BUFFER, NB);
 	glEnableVertexAttribArray(n_loc);
 	glVertexAttribPointer(n_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	tan_loc = glGetAttribLocation(prog.GetID(), "m_tangent");
+	tan_loc = glGetAttribLocation(progID, "m_tangent");
 	glBindBuffer(GL_ARRAY_BUFFER, Tan);
 	glEnableVertexAttribArray(tan_loc);
 	glVertexAttribPointer(tan_loc , 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	bitan_loc = glGetAttribLocation(prog.GetID(), "m_bitangent");
+	bitan_loc = glGetAttribLocation(progID, "m_bitangent");
 	glBindBuffer(GL_ARRAY_BUFFER, Bitan);
 	glEnableVertexAttribArray(bitan_loc);
 	glVertexAttribPointer(bitan_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -137,14 +131,14 @@ void ObjDrawer::setNormalTex(char const* nor_path)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glBindTexture(GL_TEXTURE_2D, tex);
 
-	GLuint sampler = glGetUniformLocation(prog.GetID(), "normal_tex");
-	glUseProgram(prog.GetID());
+	GLuint sampler = glGetUniformLocation(progID, "normal_tex");
+	glUseProgram(progID);
 	glUniform1i(sampler, 0);
 }
 
 void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ)
 {
-	glUseProgram(prog.GetID());
+	glUseProgram(progID);
 
 	Matrix4<float> m_model;
 	m_model.SetRotationX(-1.57);
@@ -174,16 +168,16 @@ void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, 
 	m.Get(m_sending);
 
 
-	GLint m_pos = glGetUniformLocation(prog.GetID(), "m");
+	GLint m_pos = glGetUniformLocation(progID, "m");
 	glUniformMatrix4fv(m_pos, 1, false, m_sending);
 
-	GLint mv_pos = glGetUniformLocation(prog.GetID(), "mv");
+	GLint mv_pos = glGetUniformLocation(progID, "mv");
 	glUniformMatrix4fv(mv_pos, 1, false, mv_sending);
 
-	GLint v_pos = glGetUniformLocation(prog.GetID(), "v");
+	GLint v_pos = glGetUniformLocation(progID, "v");
 	glUniformMatrix4fv(v_pos, 1, false, v_sending);
 
-	GLint mvp_pos = glGetUniformLocation(prog.GetID(), "mvp");
+	GLint mvp_pos = glGetUniformLocation(progID, "mvp");
 	glUniformMatrix4fv(mvp_pos, 1, false, sending);
 }
 
@@ -194,21 +188,21 @@ void ObjDrawer::setPerspect(bool isPerspect)
 
 void ObjDrawer::resetGLProg()
 {
-	prog.Bind();
-	glDeleteProgram(prog.GetID());
+	glUseProgram(progID);
+	glDeleteProgram(progID);
 }
 
 
 
 void ObjDrawer::drawV()
 {
-	prog.Bind();
+	glUseProgram(progID);
 	glDrawArrays(GL_POINTS, 0, obj.NV());
 }
 
 void ObjDrawer::drawTri()
 {
-	glUseProgram(prog.GetID());
+	glUseProgram(progID);
 	glBindVertexArray(VAO);
 	glEnableVertexAttribArray(v_loc);
 	glEnableVertexAttribArray(n_loc);

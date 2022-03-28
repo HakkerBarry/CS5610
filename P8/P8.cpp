@@ -154,8 +154,22 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	// Setup program
+	GLSLShader vs, fs, gs;
+	GLSLProgram prog;
+	prog.CreateProgram();
+
+	vs.CompileFile("./teapotVS.glsl", GL_VERTEX_SHADER);
+	fs.CompileFile("./teapotFS.glsl", GL_FRAGMENT_SHADER);
+	//gs.CompileFile("./teapotGS.glsl", GL_GEOMETRY_SHADER);
+	prog.AttachShader(vs);
+	prog.AttachShader(fs);
+	//prog.AttachShader(gs);
+	prog.Link();
+
+
 	objDrawer = new ObjDrawer("res/plane.obj", false);
-	objDrawer->setShader("./teapotVS.glsl", "./teapotFS.glsl");
+	objDrawer->setProg(prog.GetID());
 	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 	objDrawer->setNormalTex(argv[1]);
 	objDrawer->setAttrib();

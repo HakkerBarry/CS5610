@@ -15,8 +15,9 @@ class ObjDrawer
 {
 private:
 	TriMesh obj;
-	GLSLShader vs, fs;
-	GLSLProgram prog;
+
+	GLuint progID;
+
 	// BUFFER
 	GLuint VAO;
 	GLuint VBO;
@@ -43,7 +44,7 @@ private:
 
 public:
 	ObjDrawer(char const* filename, bool loadMtl);
-	void setShader(char const* vs_path, char const* fs_path);
+	void setProg(GLuint prog_id);
 	void drawV();
 	void drawTri();
 	void setAttrib();
