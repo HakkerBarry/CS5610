@@ -157,7 +157,7 @@ int main(int argc, char** argv)
 	objDrawer = new ObjDrawer("res/plane.obj", false);
 	objDrawer->setShader("./teapotVS.glsl", "./teapotFS.glsl");
 	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
-	objDrawer->setNormalTex("./res/teapot_normal.png");
+	objDrawer->setNormalTex(argv[1]);
 	objDrawer->setAttrib();
 
 

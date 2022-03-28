@@ -219,4 +219,6 @@ void ObjDrawer::drawTri()
 	glDisableVertexAttribArray(v_loc);
 	glDisableVertexAttribArray(n_loc);
 	glDisableVertexAttribArray(tc_loc);
+	glDisableVertexAttribArray(tan_loc);
+	glDisableVertexAttribArray(bitan_loc);
 }
