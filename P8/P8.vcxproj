@@ -198,8 +198,10 @@ xcopy /y /d "$(SolutionDir)\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(Out
     <ClInclude Include="ObjDrawer.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="lineFS.glsl" />
+    <None Include="lineVS.glsl" />
     <None Include="teapotFS.glsl" />
-    <None Include="teapotGS.glsl" />
+    <None Include="lineGS.glsl" />
     <None Include="teapotVS.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

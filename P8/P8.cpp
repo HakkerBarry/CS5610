@@ -30,11 +30,30 @@ GLint origFB = 0;
 
 GLuint rendTexture;
 
+// For A8
+GLSLShader p_vs, p_fs, p_gs;
+GLSLProgram p_prog;
+
+GLSLShader l_vs, l_fs, l_gs;
+GLSLProgram l_prog;
+
+bool showLine = false;
+
 void displayFunc()
 {
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glUseProgram(p_prog.GetID());
+	objDrawer->setProg(p_prog.GetID());
 	objDrawer->drawTri();
+
+	if (showLine) {
+		glUseProgram(l_prog.GetID());
+		objDrawer->setProg(l_prog.GetID());
+		objDrawer->drawTri();
+	}
+	
 	glutSwapBuffers();
 }
 
@@ -43,6 +62,10 @@ void keyboardFunc(unsigned char key, int x, int y)
 	switch (key) {
 	case 27:
 		glutLeaveMainLoop();
+		break;
+	case ' ':
+		showLine = !showLine;
+		displayFunc();
 		break;
 	}
 }
@@ -80,10 +103,16 @@ void motionFunc(int x, int y)
 	if (isLeftDraging) {
 		rotationY -= (float)deltaX / 500;
 		rotationX -= (float)deltaY / 500;
+		objDrawer->setProg(p_prog.GetID());
+		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+		objDrawer->setProg(l_prog.GetID());
 		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 	}
 	else if (isRightDraging) {
 		transZ += (float)deltaY / 500;
+		objDrawer->setProg(p_prog.GetID());
+		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+		objDrawer->setProg(l_prog.GetID());
 		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 	}
 
@@ -154,22 +183,36 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	// Setup program
-	GLSLShader vs, fs, gs;
-	GLSLProgram prog;
-	prog.CreateProgram();
+	// Setup plane program
+	p_prog.CreateProgram();
 
-	vs.CompileFile("./teapotVS.glsl", GL_VERTEX_SHADER);
-	fs.CompileFile("./teapotFS.glsl", GL_FRAGMENT_SHADER);
+	p_vs.CompileFile("./teapotVS.glsl", GL_VERTEX_SHADER);
+	p_fs.CompileFile("./teapotFS.glsl", GL_FRAGMENT_SHADER);
 	//gs.CompileFile("./teapotGS.glsl", GL_GEOMETRY_SHADER);
-	prog.AttachShader(vs);
-	prog.AttachShader(fs);
+	p_prog.AttachShader(p_vs);
+	p_prog.AttachShader(p_fs);
 	//prog.AttachShader(gs);
-	prog.Link();
+	p_prog.Link();
+
+	// Setup line program
+	l_prog.CreateProgram();
+
+	l_vs.CompileFile("./teapotVS.glsl", GL_VERTEX_SHADER);
+	l_gs.CompileFile("./lineGS.glsl", GL_GEOMETRY_SHADER);
+	l_fs.CompileFile("./lineFS.glsl", GL_FRAGMENT_SHADER);
+	l_prog.AttachShader(p_vs);
+	l_prog.AttachShader(l_fs);
+	l_prog.AttachShader(l_gs);
+	l_prog.Link();
 
 
 	objDrawer = new ObjDrawer("res/plane.obj", false);
-	objDrawer->setProg(prog.GetID());
+	objDrawer->setProg(p_prog.GetID());
+	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+	objDrawer->setNormalTex(argv[1]);
+	objDrawer->setAttrib();
+
+	objDrawer->setProg(l_prog.GetID());
 	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 	objDrawer->setNormalTex(argv[1]);
 	objDrawer->setAttrib();

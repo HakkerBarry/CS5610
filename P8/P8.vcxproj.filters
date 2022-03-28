@@ -58,7 +58,13 @@
     <None Include="teapotFS.glsl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="teapotGS.glsl">
+    <None Include="lineGS.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="lineFS.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="lineVS.glsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
