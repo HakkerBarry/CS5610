@@ -37,6 +37,7 @@ private:
 
 	// texture
 	GLuint tex;
+	GLuint disp_tex;
 
 	Matrix4<float> mvp;
 	bool isPerspect;
@@ -49,6 +50,7 @@ public:
 	void drawTri();
 	void setAttrib();
 	void setNormalTex(char const* nor_path);
+	void setDisplacementTex(char const* nor_path);
 	void setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ);
 	void setPerspect(bool isPerspect);
 	void resetGLProg();

@@ -15,7 +15,7 @@ uniform sampler2D normal_tex;
 void main()
 {
     vec3 t_normal = texture(normal_tex, texCoord).xyz;
-    t_normal = normalize(t_normal * 2.0 - 1.0);  
+    t_normal = normalize(t_normal * 2.0 - 1.0);
     
     vec4 ambient = vec4(.2, 0, 0, 1);
     vec3 diffuse = pow(max(dot(t_light, t_normal), 0), 2) * vec3(1, 0, 0);

@@ -205,18 +205,18 @@ int main(int argc, char** argv)
 	l_prog.AttachShader(l_gs);
 	l_prog.Link();
 
-
 	objDrawer = new ObjDrawer("res/plane.obj", false);
 	objDrawer->setProg(p_prog.GetID());
 	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 	objDrawer->setNormalTex(argv[1]);
+	if (argc >= 3) {
+		objDrawer->setDisplacementTex(argv[2]);
+	}
 	objDrawer->setAttrib();
 
 	objDrawer->setProg(l_prog.GetID());
 	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
-	objDrawer->setNormalTex(argv[1]);
 	objDrawer->setAttrib();
-
 
 	//displayFunc();
 
