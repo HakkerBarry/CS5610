@@ -34,10 +34,12 @@ GLuint rendTexture;
 GLSLShader p_vs, p_fs, p_gs;
 GLSLProgram p_prog;
 
-GLSLShader l_vs, l_fs, l_gs;
+GLSLShader l_vs, l_fs, l_gs, l_tcs, l_tes;
 GLSLProgram l_prog;
 
 bool showLine = false;
+bool hasDisp = false;
+int tes_level = 8;
 
 void displayFunc()
 {
@@ -51,7 +53,9 @@ void displayFunc()
 	if (showLine) {
 		glUseProgram(l_prog.GetID());
 		objDrawer->setProg(l_prog.GetID());
-		objDrawer->drawTri();
+		objDrawer->setTesLevel(tes_level);
+		if (hasDisp) objDrawer->drawPatches();
+		else objDrawer->drawTri();
 	}
 	
 	glutSwapBuffers();
@@ -126,6 +130,16 @@ void specialFunc(int key, int x, int y) {
 	if (key == GLUT_KEY_F6) {
 		objDrawer->resetGLProg();
 	}
+	switch (key) {
+	case GLUT_KEY_LEFT:
+		tes_level--;
+		displayFunc();
+		break;
+	case GLUT_KEY_RIGHT:
+		tes_level++;
+		displayFunc();
+		break;
+	}
 }
 
 void idleFunc()
@@ -183,6 +197,10 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	if (argc >= 3) {
+		hasDisp = true;
+	}
+
 	// Setup plane program
 	p_prog.CreateProgram();
 
@@ -192,14 +210,23 @@ int main(int argc, char** argv)
 	p_prog.AttachShader(p_vs);
 	p_prog.AttachShader(p_fs);
 	//prog.AttachShader(gs);
+	if (argc >= 3) {
+		
+	}
 	p_prog.Link();
 
 	// Setup line program
 	l_prog.CreateProgram();
 
-	l_vs.CompileFile("./teapotVS.glsl", GL_VERTEX_SHADER);
+	l_vs.CompileFile("./lineVS.glsl", GL_VERTEX_SHADER);
 	l_gs.CompileFile("./lineGS.glsl", GL_GEOMETRY_SHADER);
 	l_fs.CompileFile("./lineFS.glsl", GL_FRAGMENT_SHADER);
+	if (argc >= 3) {
+		l_tcs.CompileFile("./lineTCS.glsl", GL_TESS_CONTROL_SHADER);
+		l_tes.CompileFile("./lineTES.glsl", GL_TESS_EVALUATION_SHADER);
+		l_prog.AttachShader(l_tcs);
+		l_prog.AttachShader(l_tes);
+	}
 	l_prog.AttachShader(p_vs);
 	l_prog.AttachShader(l_fs);
 	l_prog.AttachShader(l_gs);
@@ -211,6 +238,8 @@ int main(int argc, char** argv)
 	objDrawer->setNormalTex(argv[1]);
 	if (argc >= 3) {
 		objDrawer->setDisplacementTex(argv[2]);
+		glUseProgram(l_prog.GetID());
+		glPatchParameteri(GL_PATCH_VERTICES, 3);
 	}
 	objDrawer->setAttrib();
 

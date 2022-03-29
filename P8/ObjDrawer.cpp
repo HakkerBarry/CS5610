@@ -51,6 +51,7 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) : v_loc(-1), isPerspect
 		bitangent.push_back(bitan);
 	}
 
+
 	glUseProgram(progID);
 
 	glGenVertexArrays(1, &VAO);
@@ -155,7 +156,7 @@ void ObjDrawer::setDisplacementTex(char const* disp_path)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-	GLuint sampler = glGetUniformLocation(progID, "x");
+	GLuint sampler = glGetUniformLocation(progID, "disp_tex");
 	glUseProgram(progID);
 	glUniform1i(sampler, 1);
 }
@@ -205,6 +206,13 @@ void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, 
 	glUniformMatrix4fv(mvp_pos, 1, false, sending);
 }
 
+void ObjDrawer::setTesLevel(int level)
+{
+	GLuint tesl_pos = glGetUniformLocation(progID, "tes_level");
+	glUseProgram(progID);
+	glUniform1i(tesl_pos, level);
+}
+
 void ObjDrawer::setPerspect(bool isPerspect)
 {
 	this->isPerspect = isPerspect;
@@ -234,6 +242,23 @@ void ObjDrawer::drawTri()
 	glEnableVertexAttribArray(tan_loc);
 	glEnableVertexAttribArray(bitan_loc);
 	glDrawArrays(GL_TRIANGLES, 0, obj.NF() * 3 * sizeof(Vec3f));
+	glDisableVertexAttribArray(v_loc);
+	glDisableVertexAttribArray(n_loc);
+	glDisableVertexAttribArray(tc_loc);
+	glDisableVertexAttribArray(tan_loc);
+	glDisableVertexAttribArray(bitan_loc);
+}
+
+void ObjDrawer::drawPatches()
+{
+	glUseProgram(progID);
+	glBindVertexArray(VAO);
+	glEnableVertexAttribArray(v_loc);
+	glEnableVertexAttribArray(n_loc);
+	glEnableVertexAttribArray(tc_loc);
+	glEnableVertexAttribArray(tan_loc);
+	glEnableVertexAttribArray(bitan_loc);
+	glDrawArrays(GL_PATCHES, 0, obj.NF() * 3 * sizeof(Vec3f));
 	glDisableVertexAttribArray(v_loc);
 	glDisableVertexAttribArray(n_loc);
 	glDisableVertexAttribArray(tc_loc);

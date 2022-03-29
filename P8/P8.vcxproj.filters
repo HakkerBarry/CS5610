@@ -67,5 +67,17 @@
     <None Include="lineVS.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="teapotTCS.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="teapotTES.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="lineTCS.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="lineTES.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

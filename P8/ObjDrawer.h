@@ -48,10 +48,12 @@ public:
 	void setProg(GLuint prog_id);
 	void drawV();
 	void drawTri();
+	void drawPatches();
 	void setAttrib();
 	void setNormalTex(char const* nor_path);
 	void setDisplacementTex(char const* nor_path);
 	void setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ);
+	void setTesLevel(int level);
 	void setPerspect(bool isPerspect);
 	void resetGLProg();
 	void setTexUnit(GLint u);

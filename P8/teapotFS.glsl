@@ -11,6 +11,7 @@ uniform mat4 v;
 uniform mat4 mv;
 
 uniform sampler2D normal_tex;
+uniform sampler2D disp_tex;
 
 void main()
 {
@@ -23,6 +24,7 @@ void main()
     vec4 blinn = vec4(vec3(1, 1, 1) * pow(dot(half, t_normal), 30), 0.);
 
     FragColor = clamp(ambient + vec4(diffuse, 0) + clamp(blinn, 0, 1), 0, 1);
+    //FragColor = texture(disp_tex, texCoord);
     //FragColor = vec4(diffuse, 0);
     //FragColor = vec4(t_camera_dir, 0);
     //FragColor = vec4(t_light, 0);
