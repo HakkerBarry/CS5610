@@ -26,7 +26,7 @@ ObjDrawer* planeDrawer;
 
 GLSLProgram p_prog;
 GLSLProgram t_prog;
-GLuint depth_prog;
+GLSLProgram depth_prog;
 
 GLuint frameBuffer = 0;
 GLint origFB = 0;
@@ -37,12 +37,15 @@ void displayFunc()
 {
 	// Draw Depth Buffer
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer);
+	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, origFB);
 	glViewport(0, 0, 1024, 1024);
 	glClear(GL_DEPTH_BUFFER_BIT);
-	//objDrawer->setProg(depth_prog);
-	//planeDrawer->setProg(depth_prog);
+	//objDrawer->setProg(depth_prog.GetID());
+	//planeDrawer->setProg(depth_prog.GetID());
 	objDrawer->setCameraSize(1024, 1024);
 	planeDrawer->setCameraSize(1024, 1024);
+	objDrawer->setAttrib();
+	planeDrawer->setAttribPlane();
 	Matrix4<float> MLP = objDrawer->setMV(0.957999647, -0.318000615, 0, 0.05, 1.95399976);
 	planeDrawer->setMV(0.957999647, -0.318000615, 0, 0.05, 1.95399976);
 	objDrawer->drawTri();
@@ -50,17 +53,21 @@ void displayFunc()
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, origFB);
 	glViewport(0, 0, 1920, 1080);
-	glClearColor(0, 0, 0, 1);
+	glClearColor(0, 1, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	objDrawer->setProg(t_prog.GetID());
 	planeDrawer->setProg(p_prog.GetID());
 	objDrawer->setCameraSize(1920, 1080);
 	planeDrawer->setCameraSize(1920, 1080);
+	objDrawer->setAttrib();
+	planeDrawer->setAttribPlane();
+
 	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 	planeDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 
 	float mlp[16];
 	MLP.Get(mlp);
+	objDrawer->setMLP(mlp);
 	planeDrawer->setMLP(mlp);
 	objDrawer->drawTri();
 	planeDrawer->drawTri();
@@ -203,8 +210,10 @@ int main(int argc, char** argv)
 	glGenTextures(1, &depthMap);
 	glBindTexture(GL_TEXTURE_2D, depthMap);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
@@ -234,19 +243,26 @@ int main(int argc, char** argv)
 	p_prog.AttachShader(p_fs);
 	p_prog.Link();
 
-	//depth map shader
-	depth_prog = glCreateProgram();
-
 	//Teapot
 	objDrawer = new ObjDrawer(argv[1], false);
 	objDrawer->setProg(t_prog.GetID());
+	objDrawer->setTexUnit(0);
 	objDrawer->setAttrib();
 
 	//plane
 	planeDrawer = new ObjDrawer("res/plane.obj", false);
-	planeDrawer->setTexUnit(0);
 	planeDrawer->setProg(p_prog.GetID());
+	planeDrawer->setTexUnit(0);
 	planeDrawer->setAttribPlane();
+
+	//depth map shader
+	depth_prog.CreateProgram();
+	GLSLShader d_vs, d_fs;
+	d_vs.CompileFile("depthVS.glsl", GL_VERTEX_SHADER);
+	d_fs.CompileFile("depthFS.glsl", GL_FRAGMENT_SHADER);
+	depth_prog.AttachShader(d_vs);
+	depth_prog.AttachShader(d_fs);
+	depth_prog.Link();
 
 	glutMainLoop();
 }

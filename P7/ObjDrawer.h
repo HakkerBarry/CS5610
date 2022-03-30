@@ -45,7 +45,7 @@ public:
 	void setAttribPlane();
 	void setCameraSize(int width, int height);
 	Matrix4<float> setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ);
-	void setMLP(float* MLP);
+	void setMLP(float MLP[]);
 	void resetGLProg();
 	void setTexUnit(GLint u);
 };

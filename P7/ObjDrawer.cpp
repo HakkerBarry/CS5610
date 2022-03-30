@@ -54,12 +54,14 @@ void ObjDrawer::setTexUnit(GLint u)
 
 void ObjDrawer::setProg(GLuint prog)
 {
-	prog_id = prog;
+	this->prog_id = prog;
 }
 
 void ObjDrawer::setAttrib()
 {
 	glUseProgram(prog_id);
+	glBindVertexArray(VAO);
+
 	v_loc = glGetAttribLocation(prog_id, "VertexPos");
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glEnableVertexAttribArray(v_loc);
@@ -73,6 +75,7 @@ void ObjDrawer::setAttrib()
 
 void ObjDrawer::setAttribPlane()
 {
+	glBindVertexArray(VAO);
 	glUseProgram(prog_id);
 	v_loc = glGetAttribLocation(prog_id, "pos");
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -130,13 +133,14 @@ Matrix4<float> ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, flo
 	Matrix4<float> shadow_scale;
 	shadow_scale.SetScale(0.5);
 	Matrix4<float> shadow_trans;
-	shadow_scale.SetTranslation(Vec3f(0.5, 0.5, 0.5));
+	shadow_trans.SetTranslation(Vec3f(0.5, 0.5, 0.5));
 	return shadow_trans * shadow_scale * mvp;
 }
 
-void ObjDrawer::setMLP(float* MLP)
+void ObjDrawer::setMLP(float MLP[])
 {
-	GLint mlp_pos = glGetUniformLocation(prog_id, "mlp");
+	glUseProgram(prog_id);
+	GLint mlp_pos = glGetUniformLocation(this->prog_id, "mlp");
 	glUniformMatrix4fv(mlp_pos, 1, false, MLP);
 }
 
