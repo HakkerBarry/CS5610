@@ -53,7 +53,7 @@ void displayFunc()
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, origFB);
 	glViewport(0, 0, 1920, 1080);
-	glClearColor(0, 1, 0, 1);
+	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	objDrawer->setProg(t_prog.GetID());
 	planeDrawer->setProg(p_prog.GetID());

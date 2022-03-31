@@ -124,6 +124,12 @@ Matrix4<float> ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, flo
 	float m_sending[16];
 	m.Get(m_sending);
 
+	GLint m_pos = glGetUniformLocation(prog_id, "m");
+	glUniformMatrix4fv(m_pos, 1, false, m_sending);
+
+	GLint v_pos = glGetUniformLocation(prog_id, "v");
+	glUniformMatrix4fv(v_pos, 1, false, v_sending);
+
 	GLint mv_pos = glGetUniformLocation(prog_id, "mv");
 	glUniformMatrix4fv(mv_pos, 1, false, mv_sending);
 
