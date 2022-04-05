@@ -48,6 +48,7 @@ void displayFunc()
 
 	glUseProgram(p_prog.GetID());
 	objDrawer->setProg(p_prog.GetID());
+	objDrawer->setTesLevel(tes_level);
 	objDrawer->drawTri();
 
 	if (showLine) {
@@ -238,12 +239,15 @@ int main(int argc, char** argv)
 	objDrawer->setNormalTex(argv[1]);
 	if (argc >= 3) {
 		objDrawer->setDisplacementTex(argv[2]);
-		glUseProgram(l_prog.GetID());
-		glPatchParameteri(GL_PATCH_VERTICES, 3);
 	}
 	objDrawer->setAttrib();
 
 	objDrawer->setProg(l_prog.GetID());
+	if (argc >= 3) {
+		objDrawer->setDisplacementTex(argv[2]);
+		glUseProgram(l_prog.GetID());
+		glPatchParameteri(GL_PATCH_VERTICES, 3);
+	}
 	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 	objDrawer->setAttrib();
 

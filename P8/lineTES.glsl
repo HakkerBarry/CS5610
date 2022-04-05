@@ -6,6 +6,8 @@ in vec3 pos_TES[];
 
 out vec3 pos_GS;
 
+uniform sampler2D disp_tex;
+
 vec4 interpolate(vec4 v0, vec4 v1, vec4 v2)
 {
 	vec4 a = mix(v1, v0, gl_TessCoord.x);
@@ -16,6 +18,8 @@ vec4 interpolate(vec4 v0, vec4 v1, vec4 v2)
 void main()
 {
 	gl_Position =   vec4(gl_TessCoord.x * gl_in[0].gl_Position +
- gl_TessCoord.y * gl_in[1].gl_Position +
- gl_TessCoord.z * gl_in[2].gl_Position);
+	gl_TessCoord.y * gl_in[1].gl_Position +
+	gl_TessCoord.z * gl_in[2].gl_Position);
+
+	float Displacement = texture(disp_tex, gl_TessCoord.xy).x;
 }
