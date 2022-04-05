@@ -228,7 +228,7 @@ int main(int argc, char** argv)
 		l_prog.AttachShader(l_tcs);
 		l_prog.AttachShader(l_tes);
 	}
-	l_prog.AttachShader(p_vs);
+	l_prog.AttachShader(l_vs);
 	l_prog.AttachShader(l_fs);
 	l_prog.AttachShader(l_gs);
 	l_prog.Link();

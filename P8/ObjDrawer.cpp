@@ -192,6 +192,9 @@ void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, 
 	float m_sending[16];
 	m.Get(m_sending);
 
+	float p_sending[16];
+	m_pres.Get(p_sending);
+
 
 	GLint m_pos = glGetUniformLocation(progID, "m");
 	glUniformMatrix4fv(m_pos, 1, false, m_sending);
@@ -204,6 +207,9 @@ void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, 
 
 	GLint mvp_pos = glGetUniformLocation(progID, "mvp");
 	glUniformMatrix4fv(mvp_pos, 1, false, sending);
+
+	GLint p_pos = glGetUniformLocation(progID, "p");
+	glUniformMatrix4fv(p_pos, 1, false, p_sending);
 }
 
 void ObjDrawer::setTesLevel(int level)
