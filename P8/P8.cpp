@@ -31,7 +31,7 @@ GLint origFB = 0;
 GLuint rendTexture;
 
 // For A8
-GLSLShader p_vs, p_fs, p_gs;
+GLSLShader p_vs, p_fs, p_gs, p_tcs, p_tes;
 GLSLProgram p_prog;
 
 GLSLShader l_vs, l_fs, l_gs, l_tcs, l_tes;
@@ -39,7 +39,7 @@ GLSLProgram l_prog;
 
 bool showLine = false;
 bool hasDisp = false;
-int tes_level = 8;
+int tes_level = 1;
 
 void displayFunc()
 {
@@ -49,14 +49,14 @@ void displayFunc()
 	glUseProgram(p_prog.GetID());
 	objDrawer->setProg(p_prog.GetID());
 	objDrawer->setTesLevel(tes_level);
-	objDrawer->drawTri();
+	if (hasDisp) objDrawer->drawPatches();
+	else objDrawer->drawTri();
 
 	if (showLine) {
 		glUseProgram(l_prog.GetID());
 		objDrawer->setProg(l_prog.GetID());
 		objDrawer->setTesLevel(tes_level);
-		if (hasDisp) objDrawer->drawPatches();
-		else objDrawer->drawTri();
+		objDrawer->drawPatches();
 	}
 	
 	glutSwapBuffers();
@@ -181,6 +181,7 @@ int main(int argc, char** argv)
 
 	glutInitContextVersion(4, 5);
 	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
 
 	glutInitWindowSize(width, height);
 	glutInitWindowPosition(100, 100);
@@ -207,12 +208,16 @@ int main(int argc, char** argv)
 
 	p_vs.CompileFile("./teapotVS.glsl", GL_VERTEX_SHADER);
 	p_fs.CompileFile("./teapotFS.glsl", GL_FRAGMENT_SHADER);
-	//gs.CompileFile("./teapotGS.glsl", GL_GEOMETRY_SHADER);
 	p_prog.AttachShader(p_vs);
 	p_prog.AttachShader(p_fs);
-	//prog.AttachShader(gs);
+	
 	if (argc >= 3) {
-		
+		p_tcs.CompileFile("./teapotTCS.glsl", GL_TESS_CONTROL_SHADER);
+		p_tes.CompileFile("./teapotTES.glsl", GL_TESS_EVALUATION_SHADER);
+		//p_gs.CompileFile("./teapotGS.glsl", GL_GEOMETRY_SHADER);
+		//p_prog.AttachShader(p_gs);
+		p_prog.AttachShader(p_tcs);
+		p_prog.AttachShader(p_tes);
 	}
 	p_prog.Link();
 

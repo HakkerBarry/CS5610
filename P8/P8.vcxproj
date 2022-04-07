@@ -204,6 +204,7 @@ xcopy /y /d "$(SolutionDir)\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(Out
     <None Include="lineVS.glsl" />
     <None Include="teapotFS.glsl" />
     <None Include="lineGS.glsl" />
+    <None Include="teapotGS.glsl" />
     <None Include="teapotTCS.glsl" />
     <None Include="teapotTES.glsl" />
     <None Include="teapotVS.glsl" />

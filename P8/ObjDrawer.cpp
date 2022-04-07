@@ -157,7 +157,7 @@ void ObjDrawer::setDisplacementTex(char const* disp_path)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	GLuint sampler = glGetUniformLocation(progID, "disp_tex");
-	glUseProgram(progID);
+	glUseProgram(this->progID);
 	glUniform1i(sampler, 1);
 }
 
@@ -174,7 +174,7 @@ void ObjDrawer::setMV(float rotateX, float rotateY, float rotateZ, float scale, 
 	m_view = v_trans * m_view;
 
 	Matrix4<float> m_pres;
-	m_pres.SetPerspective(1.f, 1920. / 1080., 0.1f, 100.f);
+	m_pres.SetPerspective(1.f, 1920. / 1080., 0.000001f, 100.f);
 
 	Matrix4<float> mv = m_view * m_model;
 	Matrix4<float> v = m_view;

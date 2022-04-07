@@ -40,6 +40,6 @@ void main()
     vec3 light = vec3(-1, -1, -1);
     t_light = v_to_tan * light;
 
-	gl_Position = mvp * vec4(m_pos, 1.0);
+	gl_Position = mv * vec4(m_pos, 1.0);
 	texCoord = texc;
 }

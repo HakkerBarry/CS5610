@@ -79,5 +79,8 @@
     <None Include="lineTES.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="teapotGS.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

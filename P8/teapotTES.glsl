@@ -10,40 +10,49 @@ in vec3 w_camera_dir_ES[];
 in vec3 t_camera_dir_ES[];
 in vec3 t_light_ES[];
 
-out vec2 texCoord_GS[];
-out vec3 w_normal_GS[];
-out vec3 v_normal_GS[];
-out vec3 w_camera_dir_GS[];
-out vec3 t_camera_dir_GS[];
-out vec3 t_light_GS[];
+out vec2 texCoord_FS;
+out vec3 v_normal;
+out vec3 w_normal;
+out vec3 w_camera_dir;
+out vec3 t_camera_dir;
+out vec3 t_light;
 
-vec4 interpolate(vec4 v0, vec4 v1, vec4 v2)
-{
-	//vec4 a = mix(v0, v1, gl_TessCoord.x);
-	//vec4 b = mix(v3, v2, gl_TessCoord.x);
-	//return mix(a, b, gl_TessCoord.y);
-
-	return vec4(gl_TessCoord.x) * v0 + vec4(gl_TessCoord.y) * v1 + vec4(gl_TessCoord.z) * v2;
-}
-
-vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2)
-{
-    return vec2(gl_TessCoord.x) * v0 + vec2(gl_TessCoord.y) * v1 + vec2(gl_TessCoord.z) * v2;
-}
-
-vec3 interpolate3D(vec3 v0, vec3 v1, vec3 v2)
-{
-    return vec3(gl_TessCoord.x) * v0 + vec3(gl_TessCoord.y) * v1 + vec3(gl_TessCoord.z) * v2;
-}
+uniform mat4 p;
+uniform sampler2D disp_tex;
 
 void main()
 {
-	gl_Position = interpolate(gl_in[0].gl_Position,
-								gl_in[1].gl_Position,
-								gl_in[2].gl_Position
-								);
+	gl_Position = vec4(gl_TessCoord.x * gl_in[0].gl_Position +
+	gl_TessCoord.y * gl_in[1].gl_Position +
+	gl_TessCoord.z * gl_in[2].gl_Position);
 
-	texCoord_GS = interpolate2D(texCoord_ES[0],
-								texCoord_ES[1],
-								texCoord_ES[2]);
+	texCoord_FS = vec2(gl_TessCoord.x * texCoord_ES[0] +
+	gl_TessCoord.y * texCoord_ES[1] +
+	gl_TessCoord.z * texCoord_ES[2]);
+
+	w_normal = vec3(gl_TessCoord.x * w_normal_ES[0] +
+	gl_TessCoord.y * w_normal_ES[1] +
+	gl_TessCoord.z * w_normal_ES[2]);
+
+	v_normal = vec3(gl_TessCoord.x * v_normal_ES[0] +
+	gl_TessCoord.y * v_normal_ES[1] +
+	gl_TessCoord.z * v_normal_ES[2]);
+
+	w_camera_dir = vec3(gl_TessCoord.x * w_camera_dir_ES[0] +
+	gl_TessCoord.y * w_camera_dir_ES[1] +
+	gl_TessCoord.z * w_camera_dir_ES[2]);
+
+	t_camera_dir = vec3(gl_TessCoord.x * t_camera_dir_ES[0] +
+	gl_TessCoord.y * t_camera_dir_ES[1] +
+	gl_TessCoord.z * t_camera_dir_ES[2]);
+
+	t_light = vec3(gl_TessCoord.x * t_light_ES[0] +
+	gl_TessCoord.y * t_light_ES[1] +
+	gl_TessCoord.z * t_light_ES[2]);
+
+	float Displacement = texture(disp_tex, texCoord_FS.xy).x;
+
+	gl_Position += vec4(v_normal_ES[0] * -Displacement * 10, 0);
+	gl_Position.w = 1;
+	gl_Position = p * gl_Position;
 }
