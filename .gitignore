@@ -50,8 +50,8 @@
 mono_crash.*
 
 # Librays
-[Ll]ibs/
-[Ll]ib/
+#[Ll]ibs/
+#[Ll]ib/
 
 # Build results
 [Dd]ebug/
