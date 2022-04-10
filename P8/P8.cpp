@@ -180,7 +180,7 @@ int main(int argc, char** argv)
 	glutInit(&argc, argv);
 
 	glutInitContextVersion(4, 5);
-	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND | GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
 	glutInitWindowSize(width, height);

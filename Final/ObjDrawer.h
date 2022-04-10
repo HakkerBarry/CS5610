@@ -15,38 +15,48 @@ class ObjDrawer
 {
 private:
 	TriMesh obj;
-	GLSLShader vs, fs;
-	GLSLProgram prog;
+
+	GLuint progID;
+
 	// BUFFER
+	GLuint VAO;
 	GLuint VBO;
 	GLuint tris;
 	GLuint NB;
 	GLuint TCB;
+	GLuint Tan;
+	GLuint Bitan;
+
 	// attrib location
 	GLint v_loc;
 	GLint f_loc;
 	GLint n_loc;
 	GLint tc_loc;
+	GLint tan_loc;
+	GLint bitan_loc;
+
 	// texture
 	GLuint tex;
+	GLuint disp_tex;
 
 	Matrix4<float> mvp;
 	bool isPerspect;
 	float camerWidthScale;
 
-	void sendMVP();
-
 public:
 	ObjDrawer(char const* filename, bool loadMtl);
-	void setVS(char const* filename);
-	void setFS(char const* filename);
+	void setProg(GLuint prog_id);
 	void drawV();
 	void drawTri();
-	void setAttrib(char const* v, char const* n);
+	void drawPatches();
+	void setAttrib();
+	void setNormalTex(char const* nor_path);
+	void setDisplacementTex(char const* nor_path);
 	void setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ);
+	void setTesLevel(int level);
 	void setPerspect(bool isPerspect);
 	void resetGLProg();
-	void setCameraSize(int width, int height);
+	void setTexUnit(GLint u);
 };
 
 #endif
