@@ -64,5 +64,11 @@
     <None Include="SimpleVS.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="MeshShader.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="MeshShader.vert">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

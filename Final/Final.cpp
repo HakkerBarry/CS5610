@@ -2,206 +2,175 @@
 Zixuan Zhang A2 for CS5610 at the UofU
 */
 
-#include <glew.h>
-#include<GL/freeglut.h>
-#include<GL/gl.h>
-#include <GL/glu.h>
-#include <stdio.h>
+#ifndef CCRender
+#define CCRender
+#include "render.h"
+#endif
+#ifndef GL_H
+#define GL_H
+#include "GL/glew.h"
+#include "GL/freeglut.h"
 #include "cyTriMesh.h"
-#include "cyVector.h"
+#include "cyMatrix.h"
 #include "cyGL.h"
-#include "ObjDrawer.h"
+#include "lodepng.h"
+#include <iostream>
+#include <fstream>
+#include <vector>
+#endif
 
-using namespace cy;
+CC::Scene* scene = nullptr;
+CC::Camera* camera = nullptr;
+std::vector<CC::WorldObject*>* worldObjects = nullptr;
+CC::TextureCube* environmentMap = nullptr;
+int w = 1024;
+int h = 1024;
+bool leftButtonHold = false;
+bool rightButtonHold = false;
+int _x = 0;
+int _y = 0;
 
-bool isLeftDraging, isRightDraging;
-int prevX, prevY;
-float rotationX, rotationY, rotationZ, viewScale, transZ;
-ObjDrawer* objDrawer;
+void displayFunc() {
+    if (!scene) {
+        std::cout << "Display Error: scene not found";
+        exit(1);
+    }
+    //Clear the viewport
+    glClearColor(0.5, 0.5, 0.5, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    scene->Draw();
+    glutSwapBuffers();
 
-GLuint frameBuffer = 0;
-GLint origFB = 0;
-
-// Shaders
-GLSLShader geo_vs, geo_fs;
-GLSLProgram geo_prog;
-
-void displayFunc()
-{
-	glClearColor(.3, .3, .3, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	objDrawer->drawTri();
-	glutSwapBuffers();
 }
 
-void keyboardFunc(unsigned char key, int x, int y)
-{
-	switch (key) {
-	case 27:
-		glutLeaveMainLoop();
-		break;
-	}
+void keyboardFunc(unsigned char key, int x, int y) {
+    //Handle keyboard input here
+    CC::vec3 pos;
+    switch (key) {
+    case 27: //ESC
+        glutLeaveMainLoop();
+        break;
+    case 'w':
+        camera->cameraDirectionMove(0.05);
+        pos = camera->getPosition();
+        std::cout << pos.x << " " << pos.y << " " << pos.z << "\n";
+        break;
+    case 's':
+        camera->cameraDirectionMove(-0.05);
+        pos = camera->getPosition();
+        std::cout << pos.x << " " << pos.y << " " << pos.z << "\n";
+        break;
+    case 'd':
+        camera->cameraHorizontalMove(0.05);
+        break;
+    case 'a':
+        camera->cameraHorizontalMove(-0.05);
+        break;
+    }
 }
 
 void mouseFunc(int button, int state, int x, int y) {
-	if (button == GLUT_LEFT_BUTTON)
-	{
-		if (state == GLUT_DOWN) {
-			isLeftDraging = true;
-			prevX = x;
-			prevY = y;
-		}
-		if (state == GLUT_UP) {
-			isLeftDraging = false;
-		}
-	}
 
-	if (button == GLUT_RIGHT_BUTTON) {
-		if (state == GLUT_DOWN) {
-			isRightDraging = true;
-			prevX = x;
-			prevY = y;
-		}
-		if (state == GLUT_UP) {
-			isRightDraging = false;
-		}
-	}
-}
-
-void motionFunc(int x, int y)
-{
-	int deltaX = x - prevX;
-	int deltaY = y - prevY;
-
-	if (isLeftDraging) {
-		rotationX += (float)deltaY / 500;
-		rotationZ += (float)deltaX / 500;
-		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
-	}
-	else if (isRightDraging) {
-		transZ += (float)deltaY / 500;
-		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
-	}
-
-	prevX = x;
-	prevY = y;
-
-	displayFunc();
-}
-
-void specialFunc(int key, int x, int y) {
-	if (key == GLUT_KEY_F6) {
-		objDrawer->resetGLProg();
-	}
-}
-
-void idleFunc()
-{
+    switch (button) {
+    case 2://right
+        if (!leftButtonHold) {
+            rightButtonHold = (state == 0);
+        }
+        break;
+    case 0://left
+        if (!rightButtonHold) {
+            leftButtonHold = (state == 0);
+        }
+        break;
+    }
 
 }
 
-//void timerFunc(int t)
-//{
-//	glClearColor(0, color, color, 1);
-//	if (colorFlag) color -= 0.03;
-//	else color += 0.03;
-//	if (color > 1) colorFlag = true;
-//	else if (color < 0) colorFlag = false;
-//	glutPostRedisplay();
-//	glutTimerFunc(50, timerFunc, 0);
-//}
+void mouseMotionFunc(int x, int y) {
 
-void setupFuncs() {
-	glutDisplayFunc(displayFunc);
-	glutKeyboardFunc(keyboardFunc);
-	glutSpecialFunc(specialFunc);
-	glutIdleFunc(idleFunc);
-	glutMouseFunc(mouseFunc);
-	glutMotionFunc(motionFunc);
+    if (_x != x) {
+        if (rightButtonHold) {
+            float delta = _x > x ? -0.2 : 0.2;
+
+
+        }
+        else if (leftButtonHold) {
+            float deltaY = _x > x ? -0.2 : 0.2;
+            //rotY += deltaY;
+            camera->horizontalRotate(deltaY);
+        }
+        _x = x;
+    }
+    else if (_y != y) {
+        if (leftButtonHold) {
+            float deltaX = _y > y ? 0.05 : -0.05;
+            //rotX += deltaX;
+            camera->verticalRotate(deltaX);
+        }
+        _y = y;
+    }
+
 }
 
-int main(int argc, char** argv)
-{
-	rotationX = 0;
-	rotationY = 0;
-	rotationZ = 0;
-	viewScale = .05;
-	transZ = -2;
-	int width = 1920;
-	int height = 1080;
-	//GLUT Init
-	glutInit(&argc, argv);
-
-	glutInitWindowSize(1920, 1080);
-	glutInitWindowPosition(100, 100);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH);
-	glutCreateWindow("CS 5610 Final Project");
-	setupFuncs();
-
-	// GLEW Init
-	GLenum res = glewInit();
-	if (res != GLEW_OK)
-	{
-		fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
-		return 1;
-	}
-
-	glutInitContextVersion(4, 5);
-	glEnable(GL_BLEND | GL_DEPTH_TEST);
-
-	//// init G-buffer framebuffer
-	//unsigned int gBuffer;
-	//glGenFramebuffers(1, &gBuffer);
-	//glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
-
-	//unsigned int gPosition, gNormal, gAlbedo;
-	//// screen space position color
-	//glGenTextures(1, &gPosition);
-	//glBindTexture(GL_TEXTURE_2D, gPosition);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
-	//// world-space normal buffer
-	//glGenTextures(1, &gNormal);
-	//glBindTexture(GL_TEXTURE_2D, gNormal);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
-	//// specular
-	//glGenTextures(1, &gAlbedo);
-	//glBindTexture(GL_TEXTURE_2D, gAlbedo);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedo, 0);
-
-	//unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-	//glDrawBuffers(3, attachments);
-
-	//Shader
-	geo_prog.CreateProgram();
-	geo_vs.CompileFile("SimpleVS.glsl", GL_VERTEX_SHADER);
-	geo_fs.CompileFile("SimpleFS.glsl", GL_FRAGMENT_SHADER);
-	geo_prog.AttachShader(geo_vs);
-	geo_prog.AttachShader(geo_fs);	
-	geo_prog.Link();
-
-	// Load Mesh
-	objDrawer = new ObjDrawer("res/teapot.obj", true);
-	objDrawer->setProg(geo_prog.GetID());
-	objDrawer->setAttrib();
-	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
-
-
-	glutMainLoop();
-
-	return 0;
+void idleFunc() {
+    //Handle animations here
+    //Tell GLUT to redraw
+    glutPostRedisplay();
 }
 
+void createWindow() {
+    //Create a window
+    glutInitWindowSize(w, h);
+    glutInitWindowPosition(100, 100);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+    glutCreateWindow("CS5610");
+}
 
+void registerCallback() {
+    //register callback function
+    glutDisplayFunc(displayFunc);
+    glutKeyboardFunc(keyboardFunc);
+    glutMouseFunc(mouseFunc);
+    glutMotionFunc(mouseMotionFunc);
+    glutIdleFunc(idleFunc);
+}
 
-//Screen constants
+void initializeScene() {
+    // global varible
+    camera = new CC::Camera();
+    CC::MeshShader* meshShader = new CC::MeshShader();
+    worldObjects = new std::vector<CC::WorldObject*>();
+    CC::Material* defaultMaterial = new CC::Material(meshShader, 500, CC::vec3(0.95, 0.95, 0.95), CC::vec3(0.5, 0.5, 0.5));
+    CC::Light* light = new CC::Light(CC::vec3(0.2, 0.2, 0.2), CC::vec3(10, 10, 10), CC::vec3(0.9, 0.9, 0.9));
+    // obj 1
+    CC::PolygonalMesh* teapot = new CC::PolygonalMesh("res/teapot.obj");
+    CC::RenderObject* teapot_renderObject = new CC::RenderObject(teapot, defaultMaterial);
+    CC::WorldObject* Obj1 = new CC::WorldObject(teapot_renderObject, light, camera, CC::vec3(0, 0, 0), CC::vec3(1, 1, 1), 0);
+    worldObjects->push_back(Obj1);
+    // obj 2
+    CC::PolygonalMesh* plate = new CC::PolygonalMesh("res/plate.obj");
+    CC::RenderObject* plate_renderObject = new CC::RenderObject(plate, defaultMaterial);
+    CC::WorldObject* Obj2 = new CC::WorldObject(plate_renderObject, light, camera, CC::vec3(0, -0.5, 0), CC::vec3(4, 4, 4), 0);
+    worldObjects->push_back(Obj2);
+    // obj 3
+    CC::WorldObject* Obj3 = new CC::WorldObject(teapot_renderObject, light, camera, CC::vec3(1, 0, 0.5), CC::vec3(0.5, 0.5, 0.5), 145);
+    worldObjects->push_back(Obj3);
+    CC::WorldObject* Obj4 = new CC::WorldObject(teapot_renderObject, light, camera, CC::vec3(-1, 0, -1), CC::vec3(0.5, 0.5, 0.5), 60);
+    worldObjects->push_back(Obj4);
+
+    scene = new CC::Scene(worldObjects, environmentMap, camera);
+}
+
+int main(int argc, char** argv) {
+    //GLUT initialization
+    glutInit(&argc, argv);
+    createWindow();
+    registerCallback();
+    glewInit();//Init after create window
+    std::cout << "Start Initialize Scene";
+    initializeScene();
+    std::cout << "Start Main Loop";
+    //call main loop
+    glutMainLoop();
+    return 0;
+}
