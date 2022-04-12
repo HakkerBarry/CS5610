@@ -76,6 +76,7 @@ namespace CC {
 		~Shader();
 		void Use();
 		virtual void UploadM(mat4& M) { }
+		virtual void UploadV(mat4& V) { }
 		virtual void UploadInvM(mat4& InVM) { }
 		virtual void UploadMVP(mat4& MVP) { }
 		virtual void UploadVP(mat4& VP) { }
@@ -137,6 +138,15 @@ namespace CC {
 		EnvironmentShader();
 		void UploadSamplerCubeID();
 		void UploadViewDirMatrix(mat4& viewDirMatrix);
+	};
+	//simple shader
+	class SimpleShader : public Shader {
+	public:
+		SimpleShader();
+		void UploadM(mat4& M);
+		void UploadV(mat4& V);
+		void UploadMVP(mat4& MVP);
+		void UploadInvM(mat4& InvM);
 	};
 	//Geo
 	class Mesh

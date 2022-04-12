@@ -41,5 +41,5 @@ void main(){
 	//vec3 rgb = ambient * diffuse + light * (diffuse + specular) * shadow;
 	//float depthValue = texture(shadowMap, frag_txc).r;
 
-	gl_FragColor = vec4(rgb,1);
+	gl_FragColor = vec4(normal,1);
 }

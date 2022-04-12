@@ -138,7 +138,8 @@ void registerCallback() {
 void initializeScene() {
     // global varible
     camera = new CC::Camera();
-    CC::MeshShader* meshShader = new CC::MeshShader();
+    CC::SimpleShader* meshShader = new CC::SimpleShader();
+    //CC::MeshShader* meshShader = new CC::MeshShader();
     worldObjects = new std::vector<CC::WorldObject*>();
     CC::Material* defaultMaterial = new CC::Material(meshShader, 500, CC::vec3(0.95, 0.95, 0.95), CC::vec3(0.5, 0.5, 0.5));
     CC::Light* light = new CC::Light(CC::vec3(0.2, 0.2, 0.2), CC::vec3(10, 10, 10), CC::vec3(0.9, 0.9, 0.9));

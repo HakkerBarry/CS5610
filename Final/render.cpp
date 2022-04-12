@@ -446,6 +446,34 @@ void EnvironmentShader::UploadViewDirMatrix(mat4& viewDirMatrix) {
     shaderProgram->SetUniformMatrix4("viewDirMatrix", viewDirMatrix.m);
 }
 
+SimpleShader::SimpleShader() {
+    shaderProgram->CreateProgram();
+    cy::GLSLShader vs;
+    vs.CompileFile("SimpleVS.glsl", GL_VERTEX_SHADER);
+    cy::GLSLShader fs;
+    fs.CompileFile("SimpleFS.glsl", GL_FRAGMENT_SHADER);
+    shaderProgram->AttachShader(vs);
+    shaderProgram->AttachShader(fs);
+    shaderProgram->Link();
+}
+
+void SimpleShader::UploadM(mat4& M)
+{
+    shaderProgram->SetUniformMatrix4("m", M.m);
+}
+
+void SimpleShader::UploadMVP(mat4& MVP) {
+    shaderProgram->SetUniformMatrix4("mvp", MVP.m);
+}
+
+void SimpleShader::UploadInvM(mat4& InvM) {
+    shaderProgram->SetUniformMatrix4("invM", InvM.m);
+}
+
+void SimpleShader::UploadV(mat4& V) {
+    shaderProgram->SetUniformMatrix4("v", V.m);
+}
+
 Texture::Texture(const std::string& inputFileName) {
     std::vector<unsigned char> data;
     unsigned width, height;
@@ -768,11 +796,13 @@ void WorldObject::UploadAttributes(Shader* s) {
 
     mat4 MVP = M * camera->getViewMatrix() * camera->getProjectionMatrix();
     mat4 VP = camera->getViewMatrix() * camera->getProjectionMatrix();
+    mat4 V = camera->getViewMatrix();
 
     s->UploadM(M);
     s->UploadInvM(InvM);
     s->UploadMVP(MVP);
     s->UploadVP(VP);
+    s->UploadV(V);
 }
 
 Scene::Scene(std::vector<WorldObject*>* worldObjects, TextureCube* environmentMap, Camera* camera) {
