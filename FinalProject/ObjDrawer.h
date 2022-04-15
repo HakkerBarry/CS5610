@@ -8,8 +8,6 @@
 #include "cyTriMesh.h"
 #include "cyMatrix.h"
 #include "cyGL.h"
-#include "glm/glm.hpp"
-
 
 using namespace cy;
 
@@ -17,23 +15,27 @@ class ObjDrawer
 {
 private:
 	TriMesh obj;
+	//GLSLShader vs, fs;
+	//GLSLProgram prog;
 	GLuint p_id;
 	GLuint VBO;
 	GLint v_loc;
-	glm::mat4 m;
+	Matrix4<float> mvp;
 	int v_num;
 	bool isPerspect;
-	glm::vec3 w_position;
-	
+
 	void sendMVP();
-	
+
 public:
 	ObjDrawer(char const* filename, bool loadMtl);
-	void setProg(GLuint);
+	void setProg(GLuint id);
+	//void setVS(char const* filename);
+	//void setFS(char const* filename);
 	void drawV();
 	void setAttrib(char const* v);
 	void setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ);
 	void setPerspect(bool isPerspect);
+	/*void resetGLProg();*/
 };
 
 #endif

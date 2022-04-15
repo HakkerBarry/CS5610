@@ -15,7 +15,7 @@ private:
 
 	void updateState();
 public:
-	Camera(glm::vec3 position, glm::vec3 direction, float fov, int scr_w, int scr_h);
+	Camera(glm::vec3 position, glm::vec3 rotation, float fov, int scr_w, int scr_h);
 	glm::mat4 getView();
 	glm::mat4 getProj();
 	void moveFront(float x);

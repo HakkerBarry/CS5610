@@ -171,10 +171,12 @@ xcopy /y /d "$(SolutionDir)libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(OutD
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="FinalProject.cpp" />
     <ClCompile Include="ObjDrawer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="cyCore.h" />
     <ClInclude Include="cyGL.h" />
     <ClInclude Include="cyIVector.h" />

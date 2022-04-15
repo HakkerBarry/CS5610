@@ -12,8 +12,6 @@ Zixuan Zhang A2 for CS5610 at the UofU
 #include "cyGL.h"
 #include "ObjDrawer.h"
 
-#include <glm/glm.hpp>
-
 using namespace cy;
 
 bool isLeftDraging, isRightDraging;
@@ -139,20 +137,25 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
-
 	// Load Mesh
 	objDrawer = new ObjDrawer("res/teapot.obj", false);
 
-	// Set up VS FS
-	GLSLProgram simpleP;
+	GLSLProgram simple_prog;
 	GLSLShader sim_vs, sim_fs;
+	simple_prog.CreateProgram();
 	sim_vs.CompileFile("shaders/SimpleVS.glsl", GL_VERTEX_SHADER);
 	sim_fs.CompileFile("shaders/SimpleFS.glsl", GL_FRAGMENT_SHADER);
-	simpleP.AttachShader(sim_vs);
-	simpleP.AttachShader(sim_fs);
-	simpleP.Link();
-	objDrawer->setProg(simpleP.GetID());
+	simple_prog.AttachShader(sim_vs);
+	simple_prog.AttachShader(sim_fs);
+	simple_prog.Link();
+
+	objDrawer->setProg(simple_prog.GetID());
+
+
+	// Set up VS FS
+	//objDrawer->setVS("shaders/SimpleVS.glsl");
+	//objDrawer->setFS("shaders/SimpleFS.glsl");
+
 
 	// Set mvp
 	objDrawer->setAttrib("pos");
