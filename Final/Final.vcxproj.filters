@@ -64,10 +64,16 @@
     <None Include="SimpleVS.glsl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="MeshShader.frag">
+    <None Include="9.ssao.fs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="MeshShader.vert">
+    <None Include="9.ssao.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="9.ssao_blur.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="9.ssao_lighting.fs">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

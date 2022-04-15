@@ -188,8 +188,10 @@ xcopy /y /d "$(SolutionDir)\libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(Out
     <ClInclude Include="render.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="MeshShader.frag" />
-    <None Include="MeshShader.vert" />
+    <None Include="9.ssao.fs" />
+    <None Include="9.ssao.vs" />
+    <None Include="9.ssao_blur.fs" />
+    <None Include="9.ssao_lighting.fs" />
     <None Include="SimpleFS.glsl" />
     <None Include="SimpleVS.glsl" />
   </ItemGroup>
