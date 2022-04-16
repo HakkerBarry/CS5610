@@ -15,22 +15,59 @@ Zixuan Zhang A2 for CS5610 at the UofU
 using namespace cy;
 
 bool isLeftDraging, isRightDraging;
-bool flightMode;
+bool flightMode, gBufferMode;
 int prevX, prevY;
 float rotationX, rotationY, rotationZ, viewScale, transZ;
 ObjDrawer* objDrawer, *plane, *teapot2;
 Camera* camera;
 
 GLSLProgram SSAO_Geo_prog;
+GLSLProgram simple_prog;
 
 int scr_w, scr_h;
+
+void drawScene() {
+	if (gBufferMode) {
+		objDrawer->setProg(SSAO_Geo_prog.GetID());
+		teapot2->setProg(SSAO_Geo_prog.GetID());
+		plane->setProg(SSAO_Geo_prog.GetID());
+	}
+	else {
+		objDrawer->setProg(simple_prog.GetID());
+		teapot2->setProg(simple_prog.GetID());
+		plane->setProg(simple_prog.GetID());
+	}
+	objDrawer->draw(camera->getView(), camera->getProj());
+	teapot2->draw(camera->getView(), camera->getProj());
+	plane->draw(camera->getView(), camera->getProj());
+}
+
+void initScene() {
+	// Setup model-----------------------------------------
+	objDrawer->setProg(simple_prog.GetID());
+	objDrawer->setAttrib();
+	objDrawer->setPosition(glm::vec3(0, 0, 0));
+	objDrawer->setScale(glm::vec3(.05f, .05f, .05f));
+	objDrawer->setRotation(glm::vec3(-90, 0, -45));
+	objDrawer->draw(camera->getView(), camera->getProj());
+
+	teapot2->setProg(simple_prog.GetID());
+	teapot2->setAttrib();
+	teapot2->setPosition(glm::vec3(1, 0, 0));
+	teapot2->setScale(glm::vec3(.05f, .05f, .05f));
+	teapot2->draw(camera->getView(), camera->getProj());
+
+	plane->setProg(simple_prog.GetID());
+	plane->setAttrib();
+	plane->setPosition(glm::vec3(0, 0, 0));
+	plane->setScale(glm::vec3(1.f, 1.f, 1.f));
+	plane->draw(camera->getView(), camera->getProj());
+}
 
 void displayFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	objDrawer->draw(camera->getView(), camera->getProj());
-	teapot2->draw(camera->getView(), camera->getProj());
-	plane -> draw(camera->getView(), camera->getProj());
+	drawScene();
 	glutSwapBuffers();
 }
 
@@ -120,6 +157,9 @@ void specialFunc(int key, int x, int y) {
 	if (key == GLUT_KEY_F1) {
 		flightMode = !flightMode;
 	}
+	if (key == GLUT_KEY_F2) {
+		gBufferMode = !gBufferMode;
+	}
 }
 
 void idleFunc()
@@ -180,7 +220,6 @@ int main(int argc, char** argv)
 	plane = new ObjDrawer("res/plane.obj", false);
 
 	// setup program--------------------------------------------
-	GLSLProgram simple_prog;
 	GLSLShader sim_vs, sim_fs;
 	simple_prog.CreateProgram();
 	sim_vs.CompileFile("shaders/SimpleVS.glsl", GL_VERTEX_SHADER);
@@ -191,31 +230,13 @@ int main(int argc, char** argv)
 
 	GLSLShader SSAO_Geo_vs, SSAO_Geo_fs;
 	SSAO_Geo_prog.CreateProgram();
-	SSAO_Geo_vs.CompileFile("shaders/SimpleVS.glsl", GL_VERTEX_SHADER);
-	SSAO_Geo_fs.CompileFile("shaders/SimpleFS.glsl", GL_FRAGMENT_SHADER);
+	SSAO_Geo_vs.CompileFile("shaders/ssao_geoVS.glsl", GL_VERTEX_SHADER);
+	SSAO_Geo_fs.CompileFile("shaders/ssao_geoFS.glsl", GL_FRAGMENT_SHADER);
 	SSAO_Geo_prog.AttachShader(SSAO_Geo_vs);
 	SSAO_Geo_prog.AttachShader(SSAO_Geo_fs);
 	SSAO_Geo_prog.Link();
 	
-	// Setup model-----------------------------------------
-	objDrawer->setProg(simple_prog.GetID());
-	objDrawer->setAttrib();
-	objDrawer->setPosition(glm::vec3(0, 0, 0));
-	objDrawer->setScale(glm::vec3(.05f, .05f, .05f));
-	objDrawer->setRotation(glm::vec3(-90, 0, -45));
-	objDrawer->draw(camera->getView(), camera->getProj());
-
-	teapot2->setProg(simple_prog.GetID());
-	teapot2->setAttrib();
-	teapot2->setPosition(glm::vec3(1, 0, 0));
-	teapot2->setScale(glm::vec3(.05f, .05f, .05f));
-	teapot2->draw(camera->getView(), camera->getProj());
-
-	plane->setProg(simple_prog.GetID());
-	plane->setAttrib();
-	plane->setPosition(glm::vec3(0, 0, 0));
-	plane->setScale(glm::vec3(1.f, 1.f, 1.f));
-	plane->draw(camera->getView(), camera->getProj());
+	initScene();
 
 	glutSwapBuffers();
 

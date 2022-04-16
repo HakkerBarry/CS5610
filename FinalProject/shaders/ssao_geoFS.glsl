@@ -9,9 +9,9 @@ in vec3 v_normal;
 
 void main()
 {    
-    // store the fragment position vector in the first gbuffer texture
+    // g buffer need view position
     gPosition = viewPos;
-    // also store the per-fragment normals into the gbuffer
+    // g Normal need view normal
     gNormal = normalize(v_normal);
     // and the diffuse per-fragment color
     gAlbedo.rgb = vec3(0.95);
