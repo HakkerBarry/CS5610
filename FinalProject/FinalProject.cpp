@@ -3,12 +3,11 @@ Zixuan Zhang A2 for CS5610 at the UofU
 */
 
 #include <glew.h>
-#include<GL/freeglut.h>
-#include<GL/gl.h>
+#include <GL/freeglut.h>
+#include <GL/gl.h>
 #include <GL/glu.h>
 #include <stdio.h>
 #include "cyTriMesh.h"
-#include "cyVector.h"
 #include "cyGL.h"
 #include "ObjDrawer.h"
 #include "Camera.h"

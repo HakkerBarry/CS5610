@@ -6,8 +6,6 @@
 #include <GL/gl.h>
 #include <glew.h>
 #include "cyTriMesh.h"
-#include "cyMatrix.h"
-#include "cyGL.h"
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -25,7 +23,6 @@ private:
 	GLuint p_id;
 	GLuint VBO;
 	GLint v_loc;
-	Matrix4<float> mvp;
 	int v_num;
 	bool isPerspect;
 
