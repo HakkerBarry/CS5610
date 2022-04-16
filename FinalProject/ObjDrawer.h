@@ -23,7 +23,7 @@ private:
 	//rotation in XYZ order
 	glm::vec3 rotation;
 	GLuint p_id;
-	GLuint VBO, NB, TCB, Tan, Bitan;
+	GLuint VAO, VBO, NB, TCB, Tan, Bitan;
 	GLint v_loc, f_loc, n_loc, tc_loc, tan_loc, bitan_loc;
 	int v_num;
 	bool isPerspect;

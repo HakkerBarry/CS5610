@@ -21,6 +21,8 @@ float rotationX, rotationY, rotationZ, viewScale, transZ;
 ObjDrawer* objDrawer, *plane, *teapot2;
 Camera* camera;
 
+GLSLProgram SSAO_Geo_prog;
+
 int scr_w, scr_h;
 
 void displayFunc()
@@ -28,6 +30,7 @@ void displayFunc()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	objDrawer->draw(camera->getView(), camera->getProj());
 	teapot2->draw(camera->getView(), camera->getProj());
+	plane -> draw(camera->getView(), camera->getProj());
 	glutSwapBuffers();
 }
 
@@ -168,12 +171,15 @@ int main(int argc, char** argv)
 	glutInitContextVersion(4, 5);
 	glEnable(GL_DEPTH_TEST);
 
+	// Setup Camera
+	camera = new Camera(glm::vec3(-0.969084, 1.74454, -0.762535), glm::vec3(-50.6, 40.6, 0), 45.f, scr_w, scr_h);
 
 	// Load Mesh
 	objDrawer = new ObjDrawer("res/teapot.obj", false);
 	teapot2 = new ObjDrawer("res/teapot.obj", false);
+	plane = new ObjDrawer("res/plane.obj", false);
 
-	// setup program
+	// setup program--------------------------------------------
 	GLSLProgram simple_prog;
 	GLSLShader sim_vs, sim_fs;
 	simple_prog.CreateProgram();
@@ -183,9 +189,14 @@ int main(int argc, char** argv)
 	simple_prog.AttachShader(sim_fs);
 	simple_prog.Link();
 
-	// Setup Camera
-	camera = new Camera(glm::vec3(-0.969084, 1.74454, - 0.762535), glm::vec3(-50.6, 40.6, 0), 45.f, scr_w, scr_h);
-
+	GLSLShader SSAO_Geo_vs, SSAO_Geo_fs;
+	SSAO_Geo_prog.CreateProgram();
+	SSAO_Geo_vs.CompileFile("shaders/SimpleVS.glsl", GL_VERTEX_SHADER);
+	SSAO_Geo_fs.CompileFile("shaders/SimpleFS.glsl", GL_FRAGMENT_SHADER);
+	SSAO_Geo_prog.AttachShader(SSAO_Geo_vs);
+	SSAO_Geo_prog.AttachShader(SSAO_Geo_fs);
+	SSAO_Geo_prog.Link();
+	
 	// Setup model-----------------------------------------
 	objDrawer->setProg(simple_prog.GetID());
 	objDrawer->setAttrib();
@@ -199,6 +210,12 @@ int main(int argc, char** argv)
 	teapot2->setPosition(glm::vec3(1, 0, 0));
 	teapot2->setScale(glm::vec3(.05f, .05f, .05f));
 	teapot2->draw(camera->getView(), camera->getProj());
+
+	plane->setProg(simple_prog.GetID());
+	plane->setAttrib();
+	plane->setPosition(glm::vec3(0, 0, 0));
+	plane->setScale(glm::vec3(1.f, 1.f, 1.f));
+	plane->draw(camera->getView(), camera->getProj());
 
 	glutSwapBuffers();
 

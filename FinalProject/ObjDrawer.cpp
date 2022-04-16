@@ -46,7 +46,6 @@ ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) :
 		bitangent.push_back(bitan);
 	}
 
-	GLuint VAO;
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
@@ -75,28 +74,26 @@ void ObjDrawer::setProg(GLuint id)
 void ObjDrawer::setAttrib()
 {
 	glUseProgram(p_id);
+	glBindVertexArray(VAO);
+
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	v_loc = glGetAttribLocation(p_id, "m_pos");
 	glVertexAttribPointer(v_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	tc_loc = glGetAttribLocation(p_id, "texc");
 	glBindBuffer(GL_ARRAY_BUFFER, TCB);
-	glEnableVertexAttribArray(tc_loc);
 	glVertexAttribPointer(tc_loc, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 	n_loc = glGetAttribLocation(p_id, "m_normal");
 	glBindBuffer(GL_ARRAY_BUFFER, NB);
-	glEnableVertexAttribArray(n_loc);
 	glVertexAttribPointer(n_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	tan_loc = glGetAttribLocation(p_id, "m_tangent");
 	glBindBuffer(GL_ARRAY_BUFFER, Tan);
-	glEnableVertexAttribArray(tan_loc);
 	glVertexAttribPointer(tan_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	bitan_loc = glGetAttribLocation(p_id, "m_bitangent");
 	glBindBuffer(GL_ARRAY_BUFFER, Bitan);
-	glEnableVertexAttribArray(bitan_loc);
 	glVertexAttribPointer(bitan_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
 }
 
@@ -116,6 +113,7 @@ void ObjDrawer::drawV()
 void ObjDrawer::draw(glm::mat4 v, glm::mat4 p)
 {
 	glUseProgram(p_id);
+	glBindVertexArray(VAO);
 
 	glm::mat4 m = glm::translate(glm::mat4(1.f), position);
 	m = glm::scale(m, scale);
@@ -133,6 +131,9 @@ void ObjDrawer::draw(glm::mat4 v, glm::mat4 p)
 
 	GLint v_pos = glGetUniformLocation(p_id, "v");
 	glUniformMatrix4fv(v_pos, 1, GL_FALSE, glm::value_ptr(v));
+
+	GLint p_pos = glGetUniformLocation(p_id, "p");
+	glUniformMatrix4fv(p_pos, 1, GL_FALSE, glm::value_ptr(p));
 	
 	// Draw obj
 	glEnableVertexAttribArray(v_loc);

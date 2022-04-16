@@ -14,7 +14,7 @@ out vec3 t_light;
 
 uniform mat4 mvp;
 uniform mat4 v;
-uniform mat4 mv;
+uniform mat4 p;
 uniform mat4 m;
 
 void main()

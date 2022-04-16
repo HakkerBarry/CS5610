@@ -58,5 +58,11 @@
     <None Include="shaders\SimpleVS.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\ssao_geoVS.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\ssao_geoFS.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
