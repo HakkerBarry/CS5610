@@ -49,19 +49,35 @@ void initScene() {
 	objDrawer->setPosition(glm::vec3(0, 0, 0));
 	objDrawer->setScale(glm::vec3(.05f, .05f, .05f));
 	objDrawer->setRotation(glm::vec3(-90, 0, -45));
-	objDrawer->draw(camera->getView(), camera->getProj());
 
 	teapot2->setProg(simple_prog.GetID());
 	teapot2->setAttrib();
 	teapot2->setPosition(glm::vec3(1, 0, 0));
 	teapot2->setScale(glm::vec3(.05f, .05f, .05f));
-	teapot2->draw(camera->getView(), camera->getProj());
 
 	plane->setProg(simple_prog.GetID());
 	plane->setAttrib();
 	plane->setPosition(glm::vec3(0, 0, 0));
 	plane->setScale(glm::vec3(1.f, 1.f, 1.f));
-	plane->draw(camera->getView(), camera->getProj());
+}
+
+void initShaders() {
+	// setup program--------------------------------------------
+	GLSLShader sim_vs, sim_fs;
+	simple_prog.CreateProgram();
+	sim_vs.CompileFile("shaders/SimpleVS.glsl", GL_VERTEX_SHADER);
+	sim_fs.CompileFile("shaders/SimpleFS.glsl", GL_FRAGMENT_SHADER);
+	simple_prog.AttachShader(sim_vs);
+	simple_prog.AttachShader(sim_fs);
+	simple_prog.Link();
+
+	GLSLShader SSAO_Geo_vs, SSAO_Geo_fs;
+	SSAO_Geo_prog.CreateProgram();
+	SSAO_Geo_vs.CompileFile("shaders/ssao_geoVS.glsl", GL_VERTEX_SHADER);
+	SSAO_Geo_fs.CompileFile("shaders/ssao_geoFS.glsl", GL_FRAGMENT_SHADER);
+	SSAO_Geo_prog.AttachShader(SSAO_Geo_vs);
+	SSAO_Geo_prog.AttachShader(SSAO_Geo_fs);
+	SSAO_Geo_prog.Link();
 }
 
 void displayFunc()
@@ -219,26 +235,11 @@ int main(int argc, char** argv)
 	teapot2 = new ObjDrawer("res/teapot.obj", false);
 	plane = new ObjDrawer("res/plane.obj", false);
 
-	// setup program--------------------------------------------
-	GLSLShader sim_vs, sim_fs;
-	simple_prog.CreateProgram();
-	sim_vs.CompileFile("shaders/SimpleVS.glsl", GL_VERTEX_SHADER);
-	sim_fs.CompileFile("shaders/SimpleFS.glsl", GL_FRAGMENT_SHADER);
-	simple_prog.AttachShader(sim_vs);
-	simple_prog.AttachShader(sim_fs);
-	simple_prog.Link();
-
-	GLSLShader SSAO_Geo_vs, SSAO_Geo_fs;
-	SSAO_Geo_prog.CreateProgram();
-	SSAO_Geo_vs.CompileFile("shaders/ssao_geoVS.glsl", GL_VERTEX_SHADER);
-	SSAO_Geo_fs.CompileFile("shaders/ssao_geoFS.glsl", GL_FRAGMENT_SHADER);
-	SSAO_Geo_prog.AttachShader(SSAO_Geo_vs);
-	SSAO_Geo_prog.AttachShader(SSAO_Geo_fs);
-	SSAO_Geo_prog.Link();
+	// init porgs
+	initShaders();
 	
+	// setup scene
 	initScene();
-
-	glutSwapBuffers();
 
 	glutMainLoop();
 
