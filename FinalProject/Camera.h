@@ -20,6 +20,7 @@ public:
 	glm::mat4 getProj();
 	void moveFront(float x);
 	void moveRight(float y);
+	void moveWorldUp(float z);
 	void rotatePitch(float p);
 	void rotateYaw(float y);
 };

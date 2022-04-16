@@ -33,10 +33,31 @@ void displayFunc()
 
 void keyboardFunc(unsigned char key, int x, int y)
 {
-	switch (key) {
-	case 27:
+	if(key == 27)
 		glutLeaveMainLoop();
-		break;
+	if (key == 'w' || key == 'W') {
+		camera->moveFront(0.02f);
+		displayFunc();
+	}
+	if (key == 's' || key == 'S') {
+		camera->moveFront(-0.02f);
+		displayFunc();
+	}
+	if (key == 'a' || key == 'A') {
+		camera->moveRight(-0.02f);
+		displayFunc();
+	}
+	if (key == 'd' || key == 'D') {
+		camera->moveRight(0.02f);
+		displayFunc();
+	}
+	if (key == 'e' || key == 'E') {
+		camera->moveWorldUp(0.02f);
+		displayFunc();
+	}
+	if (key == 'q' || key == 'Q') {
+		camera->moveWorldUp(-0.02f);
+		displayFunc();
 	}
 }
 
@@ -71,8 +92,8 @@ void motionFunc(int x, int y)
 	int deltaY = y - prevY;
 	
 	if(flightMode){
-		camera->rotatePitch(-(float)deltaY / 10);
-		camera->rotateYaw((float)deltaX / 10);
+		camera->rotatePitch(-(float)deltaY / 5);
+		camera->rotateYaw((float)deltaX / 5);
 	}
 	
 

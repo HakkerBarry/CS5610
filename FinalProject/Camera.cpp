@@ -45,6 +45,12 @@ void Camera::moveRight(float y)
 	this->updateState();
 }
 
+void Camera::moveWorldUp(float z)
+{
+	this->position += glm::vec3(0.0f, 1.0f, 0.0f) * z;
+	this->updateState();
+}
+
 void Camera::rotatePitch(float p)
 {
 	this->rotation.x += p;
