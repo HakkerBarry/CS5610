@@ -2,7 +2,7 @@
 #include "ObjDrawer.h"
 
 ObjDrawer::ObjDrawer(char const* filename, bool loadMtl) :
-	v_loc(-1), isPerspect(true), position(glm::vec3(0.f)), scale(glm::vec3(1.f))
+	v_loc(-1), isPerspect(true), position(glm::vec3(0.f)), scale(glm::vec3(1.f)), rotation(glm::vec3(0.f))
 {
 	obj.LoadFromFileObj(filename, loadMtl);
 
@@ -77,7 +77,7 @@ void ObjDrawer::setAttrib()
 	glUseProgram(p_id);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	v_loc = glGetAttribLocation(p_id, "m_pos");
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(v_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	tc_loc = glGetAttribLocation(p_id, "texc");
 	glBindBuffer(GL_ARRAY_BUFFER, TCB);
@@ -119,6 +119,9 @@ void ObjDrawer::draw(glm::mat4 v, glm::mat4 p)
 
 	glm::mat4 m = glm::translate(glm::mat4(1.f), position);
 	m = glm::scale(m, scale);
+	m = glm::rotate(m, glm::radians(this->rotation.x), glm::vec3(1, 0, 0));
+	m = glm::rotate(m, glm::radians(this->rotation.y), glm::vec3(0, 1, 0));
+	m = glm::rotate(m, glm::radians(this->rotation.z), glm::vec3(0, 0, 1));
 
 	glm::mat4 mvp = p * v * m;
 
@@ -148,6 +151,11 @@ void ObjDrawer::draw(glm::mat4 v, glm::mat4 p)
 void ObjDrawer::setPosition(glm::vec3 pos)
 {
 	this->position = pos;
+}
+
+void ObjDrawer::setRotation(glm::vec3 rotate)
+{
+	this->rotation = rotate;
 }
 
 void ObjDrawer::setScale(glm::vec3 scale)

@@ -20,6 +20,8 @@ private:
 	//GLSLProgram prog;
 	glm::vec3 position;
 	glm::vec3 scale;
+	//rotation in XYZ order
+	glm::vec3 rotation;
 	GLuint p_id;
 	GLuint VBO, NB, TCB, Tan, Bitan;
 	GLint v_loc, f_loc, n_loc, tc_loc, tan_loc, bitan_loc;
@@ -35,6 +37,7 @@ public:
 	void draw(glm::mat4 v, glm::mat4 p);
 	void setPosition(glm::vec3 pos);
 	void setScale(glm::vec3 scale);
+	void setRotation(glm::vec3 rotate);
 };
 
 #endif

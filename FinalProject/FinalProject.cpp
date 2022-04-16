@@ -18,7 +18,7 @@ bool isLeftDraging, isRightDraging;
 bool flightMode;
 int prevX, prevY;
 float rotationX, rotationY, rotationZ, viewScale, transZ;
-ObjDrawer* objDrawer;
+ObjDrawer* objDrawer, *plane, *teapot2;
 Camera* camera;
 
 int scr_w, scr_h;
@@ -27,6 +27,7 @@ void displayFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	objDrawer->draw(camera->getView(), camera->getProj());
+	teapot2->draw(camera->getView(), camera->getProj());
 	glutSwapBuffers();
 }
 
@@ -170,6 +171,7 @@ int main(int argc, char** argv)
 
 	// Load Mesh
 	objDrawer = new ObjDrawer("res/teapot.obj", false);
+	teapot2 = new ObjDrawer("res/teapot.obj", false);
 
 	// setup program
 	GLSLProgram simple_prog;
@@ -181,17 +183,22 @@ int main(int argc, char** argv)
 	simple_prog.AttachShader(sim_fs);
 	simple_prog.Link();
 
-	objDrawer->setProg(simple_prog.GetID());
-
 	// Setup Camera
 	camera = new Camera(glm::vec3(-0.969084, 1.74454, - 0.762535), glm::vec3(-50.6, 40.6, 0), 45.f, scr_w, scr_h);
 
-	// Set mvp
+	// Setup model-----------------------------------------
+	objDrawer->setProg(simple_prog.GetID());
 	objDrawer->setAttrib();
 	objDrawer->setPosition(glm::vec3(0, 0, 0));
 	objDrawer->setScale(glm::vec3(.05f, .05f, .05f));
-
+	objDrawer->setRotation(glm::vec3(-90, 0, -45));
 	objDrawer->draw(camera->getView(), camera->getProj());
+
+	teapot2->setProg(simple_prog.GetID());
+	teapot2->setAttrib();
+	teapot2->setPosition(glm::vec3(1, 0, 0));
+	teapot2->setScale(glm::vec3(.05f, .05f, .05f));
+	teapot2->draw(camera->getView(), camera->getProj());
 
 	glutSwapBuffers();
 

@@ -20,6 +20,6 @@ uniform mat4 m;
 void main()
 {
 	gl_Position = mvp * vec4(m_pos,  1.);
-	//v_normal = mat3(transpose(inverse(v * m))) * m_normal;
-	v_normal = m_normal;
+	v_normal = normalize(mat3(transpose(inverse(v*m))) * m_normal);
+	//v_normal = m_normal;
 }
