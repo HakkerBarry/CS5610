@@ -21,19 +21,16 @@ private:
 	glm::vec3 position;
 	glm::vec3 scale;
 	GLuint p_id;
-	GLuint VBO;
-	GLint v_loc;
+	GLuint VBO, NB, TCB, Tan, Bitan;
+	GLint v_loc, f_loc, n_loc, tc_loc, tan_loc, bitan_loc;
 	int v_num;
 	bool isPerspect;
-
-	void sendMVP();
 
 public:
 	ObjDrawer(char const* filename, bool loadMtl);
 	void setProg(GLuint id);
 	void drawV();
-	void setAttrib(char const* v);
-	void setMV(float rotateX, float rotateY, float rotateZ, float scale, float transformZ);
+	void setAttrib();
 	void setPerspect(bool isPerspect);
 	void draw(glm::mat4 v, glm::mat4 p);
 	void setPosition(glm::vec3 pos);

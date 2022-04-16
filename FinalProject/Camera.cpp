@@ -56,6 +56,7 @@ void Camera::rotatePitch(float p)
 	this->rotation.x += p;
 	this->updateState();
 	std::cout << "camera rotation: " << this->rotation.x << " " << this->rotation.y << " " << this->rotation.z << "\n";
+	std::cout << "position: " << this->position.x << " " << this->position.y << " " << this->position.z << "\n";
 }
 
 void Camera::rotateYaw(float y)

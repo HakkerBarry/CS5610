@@ -49,8 +49,7 @@ void displayFunc()
 	glUseProgram(p_prog.GetID());
 	objDrawer->setProg(p_prog.GetID());
 	objDrawer->setTesLevel(tes_level);
-	if (hasDisp) objDrawer->drawPatches();
-	else objDrawer->drawTri();
+	objDrawer->drawPatches();
 
 	if (showLine) {
 		glUseProgram(l_prog.GetID());
@@ -131,6 +130,7 @@ void specialFunc(int key, int x, int y) {
 	if (key == GLUT_KEY_F6) {
 		objDrawer->resetGLProg();
 	}
+	if(hasDisp)
 	switch (key) {
 	case GLUT_KEY_LEFT:
 		tes_level--;
@@ -210,15 +210,12 @@ int main(int argc, char** argv)
 	p_fs.CompileFile("./teapotFS.glsl", GL_FRAGMENT_SHADER);
 	p_prog.AttachShader(p_vs);
 	p_prog.AttachShader(p_fs);
-	
-	if (argc >= 3) {
-		p_tcs.CompileFile("./teapotTCS.glsl", GL_TESS_CONTROL_SHADER);
-		p_tes.CompileFile("./teapotTES.glsl", GL_TESS_EVALUATION_SHADER);
-		//p_gs.CompileFile("./teapotGS.glsl", GL_GEOMETRY_SHADER);
-		//p_prog.AttachShader(p_gs);
-		p_prog.AttachShader(p_tcs);
-		p_prog.AttachShader(p_tes);
-	}
+	p_tcs.CompileFile("./teapotTCS.glsl", GL_TESS_CONTROL_SHADER);
+	p_tes.CompileFile("./teapotTES.glsl", GL_TESS_EVALUATION_SHADER);
+	//p_gs.CompileFile("./teapotGS.glsl", GL_GEOMETRY_SHADER);
+	//p_prog.AttachShader(p_gs);
+	p_prog.AttachShader(p_tcs);
+	p_prog.AttachShader(p_tes);
 	p_prog.Link();
 
 	// Setup line program
@@ -227,12 +224,10 @@ int main(int argc, char** argv)
 	l_vs.CompileFile("./lineVS.glsl", GL_VERTEX_SHADER);
 	l_gs.CompileFile("./lineGS.glsl", GL_GEOMETRY_SHADER);
 	l_fs.CompileFile("./lineFS.glsl", GL_FRAGMENT_SHADER);
-	if (argc >= 3) {
-		l_tcs.CompileFile("./lineTCS.glsl", GL_TESS_CONTROL_SHADER);
-		l_tes.CompileFile("./lineTES.glsl", GL_TESS_EVALUATION_SHADER);
-		l_prog.AttachShader(l_tcs);
-		l_prog.AttachShader(l_tes);
-	}
+	l_tcs.CompileFile("./lineTCS.glsl", GL_TESS_CONTROL_SHADER);
+	l_tes.CompileFile("./lineTES.glsl", GL_TESS_EVALUATION_SHADER);
+	l_prog.AttachShader(l_tcs);
+	l_prog.AttachShader(l_tes);
 	l_prog.AttachShader(l_vs);
 	l_prog.AttachShader(l_fs);
 	l_prog.AttachShader(l_gs);
@@ -250,9 +245,9 @@ int main(int argc, char** argv)
 	objDrawer->setProg(l_prog.GetID());
 	if (argc >= 3) {
 		objDrawer->setDisplacementTex(argv[2]);
-		glUseProgram(l_prog.GetID());
-		glPatchParameteri(GL_PATCH_VERTICES, 3);
 	}
+	glUseProgram(l_prog.GetID());
+	glPatchParameteri(GL_PATCH_VERTICES, 3);
 	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 	objDrawer->setAttrib();
 

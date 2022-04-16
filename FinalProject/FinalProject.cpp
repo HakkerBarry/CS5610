@@ -25,7 +25,7 @@ int scr_w, scr_h;
 
 void displayFunc()
 {
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	objDrawer->draw(camera->getView(), camera->getProj());
 	glutSwapBuffers();
 }
@@ -152,7 +152,8 @@ int main(int argc, char** argv)
 	glutInitWindowSize(scr_w, scr_h);
 	glutInitWindowPosition(100, 100);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-	glutCreateWindow("CS 5610 Project 2");
+	glutCreateWindow("CS 5610 Final");
+	
 	setupFuncs();
 	glClearColor(0, 0, 0, 0);
 
@@ -163,6 +164,9 @@ int main(int argc, char** argv)
 		fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
 		return 1;
 	}
+	glutInitContextVersion(4, 5);
+	glEnable(GL_DEPTH_TEST);
+
 
 	// Load Mesh
 	objDrawer = new ObjDrawer("res/teapot.obj", false);
@@ -180,15 +184,13 @@ int main(int argc, char** argv)
 	objDrawer->setProg(simple_prog.GetID());
 
 	// Setup Camera
-	camera = new Camera(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), 45.f, scr_w, scr_h);
+	camera = new Camera(glm::vec3(-0.969084, 1.74454, - 0.762535), glm::vec3(-50.6, 40.6, 0), 45.f, scr_w, scr_h);
 
 	// Set mvp
-	objDrawer->setAttrib("pos");
+	objDrawer->setAttrib();
 	objDrawer->setPosition(glm::vec3(0, 0, 0));
 	objDrawer->setScale(glm::vec3(.05f, .05f, .05f));
-	//objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 
-	//objDrawer->drawV();
 	objDrawer->draw(camera->getView(), camera->getProj());
 
 	glutSwapBuffers();
