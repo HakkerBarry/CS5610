@@ -11,18 +11,23 @@ Zixuan Zhang A2 for CS5610 at the UofU
 #include "cyVector.h"
 #include "cyGL.h"
 #include "ObjDrawer.h"
+#include "Camera.h"
 
 using namespace cy;
 
 bool isLeftDraging, isRightDraging;
+bool flightMode;
 int prevX, prevY;
 float rotationX, rotationY, rotationZ, viewScale, transZ;
 ObjDrawer* objDrawer;
+Camera* camera;
+
+int scr_w, scr_h;
 
 void displayFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	objDrawer->drawV();
+	objDrawer->draw(camera->getView(), camera->getProj());
 	glutSwapBuffers();
 }
 
@@ -64,25 +69,32 @@ void motionFunc(int x, int y)
 {
 	int deltaX = x - prevX;
 	int deltaY = y - prevY;
+	
+	if(flightMode){
+		camera->rotatePitch(-(float)deltaY / 10);
+		camera->rotateYaw((float)deltaX / 10);
+	}
+	
 
 	if (isLeftDraging) {
 		rotationX += (float)deltaY / 500;
 		rotationZ += (float)deltaX / 500;
-		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+		//objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+		
 	}
 	else if (isRightDraging) {
 		transZ += (float)deltaY / 500;
-		objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+		//objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 	}
 
 	prevX = x;
 	prevY = y;
-
 	displayFunc();
 }
 
 void specialFunc(int key, int x, int y) {
-	if (key == GLUT_KEY_F6) {
+	if (key == GLUT_KEY_F1) {
+		flightMode = !flightMode;
 	}
 }
 
@@ -91,24 +103,14 @@ void idleFunc()
 
 }
 
-//void timerFunc(int t)
-//{
-//	glClearColor(0, color, color, 1);
-//	if (colorFlag) color -= 0.03;
-//	else color += 0.03;
-//	if (color > 1) colorFlag = true;
-//	else if (color < 0) colorFlag = false;
-//	glutPostRedisplay();
-//	glutTimerFunc(50, timerFunc, 0);
-//}
-
 void setupFuncs() {
 	glutDisplayFunc(displayFunc);
 	glutKeyboardFunc(keyboardFunc);
 	glutSpecialFunc(specialFunc);
 	glutIdleFunc(idleFunc);
 	glutMouseFunc(mouseFunc);
-	glutMotionFunc(motionFunc);
+	//glutMotionFunc(motionFunc);
+	glutPassiveMotionFunc(motionFunc);
 }
 
 int main(int argc, char** argv)
@@ -119,10 +121,15 @@ int main(int argc, char** argv)
 	viewScale = .05;
 	transZ = -2;
 
+	flightMode = false;
+
 	//GLUT Init
 	glutInit(&argc, argv);
 
-	glutInitWindowSize(1080, 1080);
+	scr_w = 1920;
+	scr_h = 1080;
+
+	glutInitWindowSize(scr_w, scr_h);
 	glutInitWindowPosition(100, 100);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutCreateWindow("CS 5610 Project 2");
@@ -140,6 +147,7 @@ int main(int argc, char** argv)
 	// Load Mesh
 	objDrawer = new ObjDrawer("res/teapot.obj", false);
 
+	// setup program
 	GLSLProgram simple_prog;
 	GLSLShader sim_vs, sim_fs;
 	simple_prog.CreateProgram();
@@ -151,17 +159,17 @@ int main(int argc, char** argv)
 
 	objDrawer->setProg(simple_prog.GetID());
 
-
-	// Set up VS FS
-	//objDrawer->setVS("shaders/SimpleVS.glsl");
-	//objDrawer->setFS("shaders/SimpleFS.glsl");
-
+	// Setup Camera
+	camera = new Camera(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), 45.f, scr_w, scr_h);
 
 	// Set mvp
 	objDrawer->setAttrib("pos");
-	objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
+	objDrawer->setPosition(glm::vec3(0, 0, 0));
+	objDrawer->setScale(glm::vec3(.05f, .05f, .05f));
+	//objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 
-	objDrawer->drawV();
+	//objDrawer->drawV();
+	objDrawer->draw(camera->getView(), camera->getProj());
 
 	glutSwapBuffers();
 

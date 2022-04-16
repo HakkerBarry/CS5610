@@ -1,4 +1,6 @@
 #include "Camera.h"
+//debug
+#include <iostream>
 
 void Camera::updateState()
 {
@@ -23,7 +25,7 @@ glm::mat4 Camera::getView()
 	view = glm::lookAt(this->position,
 		this->position + this->direction,
 		c_up);
-	return glm::mat4();
+	return view;
 }
 
 glm::mat4 Camera::getProj()
@@ -47,6 +49,7 @@ void Camera::rotatePitch(float p)
 {
 	this->rotation.x += p;
 	this->updateState();
+	std::cout << "camera rotation: " << this->rotation.x << " " << this->rotation.y << " " << this->rotation.z << "\n";
 }
 
 void Camera::rotateYaw(float y)
