@@ -14,10 +14,8 @@ Zixuan Zhang A2 for CS5610 at the UofU
 
 using namespace cy;
 
-bool isLeftDraging, isRightDraging;
 bool flightMode, gBufferMode;
 int prevX, prevY;
-float rotationX, rotationY, rotationZ, viewScale, transZ;
 ObjDrawer* objDrawer, *plane, *teapot2;
 Camera* camera;
 
@@ -118,28 +116,7 @@ void keyboardFunc(unsigned char key, int x, int y)
 }
 
 void mouseFunc(int button, int state, int x, int y) {
-	if (button == GLUT_LEFT_BUTTON)
-	{
-		if (state == GLUT_DOWN) {
-			isLeftDraging = true;
-			prevX = x;
-			prevY = y;
-		}
-		if (state == GLUT_UP) {
-			isLeftDraging = false;
-		}
-	}
 
-	if (button == GLUT_RIGHT_BUTTON) {
-		if (state == GLUT_DOWN) {
-			isRightDraging = true;
-			prevX = x;
-			prevY = y;
-		}
-		if (state == GLUT_UP) {
-			isRightDraging = false;
-		}
-	}
 }
 
 void motionFunc(int x, int y)
@@ -150,18 +127,6 @@ void motionFunc(int x, int y)
 	if(flightMode){
 		camera->rotatePitch(-(float)deltaY / 5);
 		camera->rotateYaw((float)deltaX / 5);
-	}
-	
-
-	if (isLeftDraging) {
-		rotationX += (float)deltaY / 500;
-		rotationZ += (float)deltaX / 500;
-		//objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
-		
-	}
-	else if (isRightDraging) {
-		transZ += (float)deltaY / 500;
-		//objDrawer->setMV(rotationX, rotationY, rotationZ, viewScale, transZ);
 	}
 
 	prevX = x;
@@ -195,14 +160,6 @@ void setupFuncs() {
 
 int main(int argc, char** argv)
 {
-	rotationX = 0;
-	rotationY = 0;
-	rotationZ = 0;
-	viewScale = .05;
-	transZ = -2;
-
-	flightMode = false;
-
 	//GLUT Init
 	glutInit(&argc, argv);
 
