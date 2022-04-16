@@ -174,7 +174,6 @@ xcopy /y /d "$(SolutionDir)libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(OutD
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="FinalProject.cpp" />
     <ClCompile Include="ObjDrawer.cpp" />
-    <ClCompile Include="Scene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -185,7 +184,6 @@ xcopy /y /d "$(SolutionDir)libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(OutD
     <ClInclude Include="cyTriMesh.h" />
     <ClInclude Include="cyVector.h" />
     <ClInclude Include="ObjDrawer.h" />
-    <ClInclude Include="Scene.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\SimpleFS.glsl" />
