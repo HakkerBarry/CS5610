@@ -32,6 +32,7 @@ GLuint ssaoFrameBuffer, ssaoBlurFBO;
 // Textures
 GLuint gPosition, gNormal, gAlbedo;
 GLuint noiseTexture;
+GLuint rboDepth;
 
 // vector for ssao samples
 std::vector<glm::vec3> ssaoKernel;
@@ -40,33 +41,50 @@ int scr_w, scr_h;
 
 
 unsigned int quadVAO = 0;
-unsigned int quadVBO;
+unsigned int quadVBO, quadCoord;
+GLuint pos_loc, texc_loc;
 void renderQuad()
 {
 	if (quadVAO == 0)
 	{
 		float quadVertices[] = {
-			// positions        // texture Coords
-			-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
-			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-			 1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
-			 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+			// positions        
+			-1.0f,  1.0f, 0.0f, 
+			-1.0f, -1.0f, 0.0f, 
+			 1.0f,  1.0f, 0.0f, 
+			 1.0f, -1.0f, 0.0f
+		};
+		// texture Coords
+		float quadTexCoords[] = {
+			0.0f, 1.0f,
+			0.0f, 0.0f,
+			1.0f, 1.0f,
+			1.0f, 0.0f,
 		};
 		// setup plane VAO
 		glGenVertexArrays(1, &quadVAO);
-		glGenBuffers(1, &quadVBO);
 		glBindVertexArray(quadVAO);
+
+		glGenBuffers(1, &quadVBO);
 		glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-		GLuint pos_loc = glGetAttribLocation(SSAO_prog.GetID(), "m_pos");
-		glEnableVertexAttribArray(pos_loc);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-		GLuint texc_loc = glGetAttribLocation(SSAO_prog.GetID(), "texc");
-		glEnableVertexAttribArray(texc_loc);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+		pos_loc = glGetAttribLocation(SSAO_prog.GetID(), "m_pos");
+		
+		glVertexAttribPointer(pos_loc, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glGenBuffers(1, &quadCoord);
+		glBindBuffer(GL_ARRAY_BUFFER, quadCoord);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadTexCoords), quadTexCoords, GL_STATIC_DRAW);
+		texc_loc = glGetAttribLocation(SSAO_prog.GetID(), "texc");
+		glVertexAttribPointer(texc_loc, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	}
+	glUseProgram(SSAO_prog.GetID());
 	glBindVertexArray(quadVAO);
+	glEnableVertexAttribArray(pos_loc);
+	glEnableVertexAttribArray(texc_loc);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glDisableVertexAttribArray(pos_loc);
+	glDisableVertexAttribArray(texc_loc);
 	glBindVertexArray(0);
 }
 
@@ -88,13 +106,22 @@ void drawScene() {
 	// 2. generate SSAO texture
 	//	 ------------------------
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		 // test
+		 //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		 /*objDrawer->setProg(simple_prog.GetID());
+		 teapot2->setProg(simple_prog.GetID());
+		 plane->setProg(simple_prog.GetID());
+		 objDrawer->draw(camera->getView(), camera->getProj());
+		 teapot2->draw(camera->getView(), camera->getProj());
+		 plane->draw(camera->getView(), camera->getProj());*/
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(SSAO_prog.GetID());
 		// Send kernel + rotation 
 		for (unsigned int i = 0; i < 64; ++i) {
 			std::string sample = "samples[" + std::to_string(i) + "]";
 			GLint sample_pos = glGetUniformLocation(SSAO_prog.GetID(), sample.c_str());
-			// "samples[" + std::to_string(i) + "]"
 			glUniform3fv(sample_pos, 1, glm::value_ptr(ssaoKernel[i]));
 		}
 		glActiveTexture(GL_TEXTURE0);
@@ -106,14 +133,7 @@ void drawScene() {
 		renderQuad();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	// test
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//	objDrawer->setProg(simple_prog.GetID());
-	//	teapot2->setProg(simple_prog.GetID());
-	//	plane->setProg(simple_prog.GetID());
-	//	objDrawer->draw(camera->getView(), camera->getProj());
-	//	teapot2->draw(camera->getView(), camera->getProj());
-	//	plane->draw(camera->getView(), camera->getProj());
+	
 	
 }
 
@@ -158,9 +178,10 @@ void initShaders() {
 	SSAO_prog.CreateProgram();
 	SSAO_vs.CompileFile("shaders/ssaoVS.glsl", GL_VERTEX_SHADER);
 	SSAO_fs.CompileFile("shaders/ssaoFS.glsl", GL_FRAGMENT_SHADER);
-	SSAO_prog.AttachShader(SSAO_Geo_vs);
-	SSAO_prog.AttachShader(SSAO_Geo_fs);
+	SSAO_prog.AttachShader(SSAO_vs);
+	SSAO_prog.AttachShader(SSAO_fs);
 	SSAO_prog.Link();
+	glUseProgram(SSAO_prog.GetID());
 	GLint sampler_pos = glGetUniformLocation(SSAO_prog.GetID(), "gPosition");
 	glUniform1i(sampler_pos, 0);
 	sampler_pos = glGetUniformLocation(SSAO_prog.GetID(), "gNormal");
@@ -319,7 +340,6 @@ int main(int argc, char** argv)
 		unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
 		glDrawBuffers(3, attachments);
 		// create and attach depth buffer (renderbuffer)
-		unsigned int rboDepth;
 		glGenRenderbuffers(1, &rboDepth);
 		glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, scr_w, scr_h);

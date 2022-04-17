@@ -17,7 +17,7 @@ float bias = 0.025;
 // tile noise texture over screen based on screen dimensions divided by noise size
 const vec2 noiseScale = vec2(800.0/4.0, 600.0/4.0); 
 
-uniform mat4 projection;
+uniform mat4 p;
 
 void main()
 {
@@ -39,7 +39,7 @@ void main()
         
         // project sample position (to sample texture) (to get position on screen/texture)
         vec4 offset = vec4(samplePos, 1.0);
-        offset = projection * offset; // from view to clip-space
+        offset = p * offset; // from view to clip-space
         offset.xyz /= offset.w; // perspective divide
         offset.xyz = offset.xyz * 0.5 + 0.5; // transform to range 0.0 - 1.0
         
@@ -52,6 +52,6 @@ void main()
     }
     occlusion = 1.0 - (occlusion / kernelSize);
     
-    //FragColor = occlusion;
-    FragColor = vec4(1, 0, 0, 1);
+    FragColor = vec4(occlusion, occlusion, occlusion, 1);
+    //FragColor = vec4(1, 0, 0, 1);
 }
