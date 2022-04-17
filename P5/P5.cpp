@@ -199,6 +199,8 @@ int main(int argc, char** argv)
 	int height = 1080;
 	//GLUT Init
 	glutInit(&argc, argv);
+	glutInitContextVersion(4, 5);
+	glutInitContextProfile(GLUT_CORE_PROFILE);
 
 	glutInitWindowSize(width, height);
 	glutInitWindowPosition(100, 100);
@@ -214,8 +216,6 @@ int main(int argc, char** argv)
 		fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
 		return 1;
 	}
-
-	glutInitContextVersion(4, 5);
 	glEnable(GL_DEPTH_TEST);
 
 	// Load Mesh

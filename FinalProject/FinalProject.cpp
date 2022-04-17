@@ -22,6 +22,7 @@ Camera* camera;
 
 GLSLProgram SSAO_Geo_prog;
 GLSLProgram simple_prog;
+GLSLProgram SSAO_prog;
 
 //Gbuffer
 GLuint gBuffer;
@@ -30,19 +31,27 @@ GLuint ssaoFBO, ssaoBlurFBO;
 int scr_w, scr_h;
 
 void drawScene() {
-	if (gBufferMode) {
+	// geo step
+	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 		objDrawer->setProg(SSAO_Geo_prog.GetID());
 		teapot2->setProg(SSAO_Geo_prog.GetID());
 		plane->setProg(SSAO_Geo_prog.GetID());
-	}
-	else {
+		objDrawer->setAttrib();
+		teapot2->setAttrib();
+		plane->setAttrib();
+		objDrawer->draw(camera->getView(), camera->getProj());
+		teapot2->draw(camera->getView(), camera->getProj());
+		plane->draw(camera->getView(), camera->getProj());
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// test
 		objDrawer->setProg(simple_prog.GetID());
 		teapot2->setProg(simple_prog.GetID());
 		plane->setProg(simple_prog.GetID());
-	}
-	objDrawer->draw(camera->getView(), camera->getProj());
-	teapot2->draw(camera->getView(), camera->getProj());
-	plane->draw(camera->getView(), camera->getProj());
+		objDrawer->draw(camera->getView(), camera->getProj());
+		teapot2->draw(camera->getView(), camera->getProj());
+		plane->draw(camera->getView(), camera->getProj());
+	
 }
 
 void initScene() {
@@ -81,6 +90,14 @@ void initShaders() {
 	SSAO_Geo_prog.AttachShader(SSAO_Geo_vs);
 	SSAO_Geo_prog.AttachShader(SSAO_Geo_fs);
 	SSAO_Geo_prog.Link();
+
+	GLSLShader SSAO_vs, SSAO_fs;
+	SSAO_prog.CreateProgram();
+	SSAO_vs.CompileFile("shaders/ssaoVS.glsl", GL_VERTEX_SHADER);
+	SSAO_fs.CompileFile("shaders/ssaoFS.glsl", GL_FRAGMENT_SHADER);
+	SSAO_prog.AttachShader(SSAO_Geo_vs);
+	SSAO_prog.AttachShader(SSAO_Geo_fs);
+	SSAO_prog.Link();
 }
 
 void displayFunc()
@@ -143,9 +160,9 @@ void specialFunc(int key, int x, int y) {
 	if (key == GLUT_KEY_F1) {
 		flightMode = !flightMode;
 	}
-	if (key == GLUT_KEY_F2) {
-		gBufferMode = !gBufferMode;
-	}
+	//if (key == GLUT_KEY_F2) {
+	//	gBufferMode = !gBufferMode;
+	//}
 }
 
 void idleFunc()
@@ -171,6 +188,8 @@ int main(int argc, char** argv)
 {
 	//GLUT Init
 	glutInit(&argc, argv);
+	glutInitContextVersion(4, 5);
+	glutInitContextProfile(GLUT_CORE_PROFILE);
 
 	scr_w = 1920;
 	scr_h = 1080;
@@ -190,7 +209,7 @@ int main(int argc, char** argv)
 		fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
 		return 1;
 	}
-	glutInitContextVersion(4, 5);
+	
 	glEnable(GL_DEPTH_TEST);
 
 	// Setup Camera

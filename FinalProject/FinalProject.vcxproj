@@ -188,6 +188,8 @@ xcopy /y /d "$(SolutionDir)libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(OutD
   <ItemGroup>
     <None Include="shaders\SimpleFS.glsl" />
     <None Include="shaders\SimpleVS.glsl" />
+    <None Include="shaders\ssaoFS.glsl" />
+    <None Include="shaders\ssaoVS.glsl" />
     <None Include="shaders\ssao_geoFS.glsl" />
     <None Include="shaders\ssao_geoVS.glsl" />
   </ItemGroup>
