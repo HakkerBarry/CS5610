@@ -12,6 +12,7 @@ Zixuan Zhang Final Project for CS5610 at the UofU
 #include "ObjDrawer.h"
 #include "Camera.h"
 #include <random>
+#include <string>
 
 using namespace cy;
 
@@ -24,15 +25,55 @@ GLSLProgram SSAO_Geo_prog;
 GLSLProgram simple_prog;
 GLSLProgram SSAO_prog;
 
-//Gbuffer
+//Framebuffers
 GLuint gBuffer;
-GLuint ssaoFBO, ssaoBlurFBO;
+GLuint ssaoFrameBuffer, ssaoBlurFBO;
+
+// Textures
+GLuint gPosition, gNormal, gAlbedo;
+GLuint noiseTexture;
+
+// vector for ssao samples
+std::vector<glm::vec3> ssaoKernel;
 
 int scr_w, scr_h;
+
+
+unsigned int quadVAO = 0;
+unsigned int quadVBO;
+void renderQuad()
+{
+	if (quadVAO == 0)
+	{
+		float quadVertices[] = {
+			// positions        // texture Coords
+			-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+			 1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+			 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+		};
+		// setup plane VAO
+		glGenVertexArrays(1, &quadVAO);
+		glGenBuffers(1, &quadVBO);
+		glBindVertexArray(quadVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+		GLuint pos_loc = glGetAttribLocation(SSAO_prog.GetID(), "m_pos");
+		glEnableVertexAttribArray(pos_loc);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		GLuint texc_loc = glGetAttribLocation(SSAO_prog.GetID(), "texc");
+		glEnableVertexAttribArray(texc_loc);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	}
+	glBindVertexArray(quadVAO);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glBindVertexArray(0);
+}
 
 void drawScene() {
 	// geo step
 	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		objDrawer->setProg(SSAO_Geo_prog.GetID());
 		teapot2->setProg(SSAO_Geo_prog.GetID());
 		plane->setProg(SSAO_Geo_prog.GetID());
@@ -44,13 +85,35 @@ void drawScene() {
 		plane->draw(camera->getView(), camera->getProj());
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	// 2. generate SSAO texture
+	//	 ------------------------
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glUseProgram(SSAO_prog.GetID());
+		// Send kernel + rotation 
+		for (unsigned int i = 0; i < 64; ++i) {
+			std::string sample = "samples[" + std::to_string(i) + "]";
+			GLint sample_pos = glGetUniformLocation(SSAO_prog.GetID(), sample.c_str());
+			// "samples[" + std::to_string(i) + "]"
+			glUniform3fv(sample_pos, 1, glm::value_ptr(ssaoKernel[i]));
+		}
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, gPosition);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, gNormal);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, noiseTexture);
+		renderQuad();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	// test
-		objDrawer->setProg(simple_prog.GetID());
-		teapot2->setProg(simple_prog.GetID());
-		plane->setProg(simple_prog.GetID());
-		objDrawer->draw(camera->getView(), camera->getProj());
-		teapot2->draw(camera->getView(), camera->getProj());
-		plane->draw(camera->getView(), camera->getProj());
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//	objDrawer->setProg(simple_prog.GetID());
+	//	teapot2->setProg(simple_prog.GetID());
+	//	plane->setProg(simple_prog.GetID());
+	//	objDrawer->draw(camera->getView(), camera->getProj());
+	//	teapot2->draw(camera->getView(), camera->getProj());
+	//	plane->draw(camera->getView(), camera->getProj());
 	
 }
 
@@ -98,11 +161,16 @@ void initShaders() {
 	SSAO_prog.AttachShader(SSAO_Geo_vs);
 	SSAO_prog.AttachShader(SSAO_Geo_fs);
 	SSAO_prog.Link();
+	GLint sampler_pos = glGetUniformLocation(SSAO_prog.GetID(), "gPosition");
+	glUniform1i(sampler_pos, 0);
+	sampler_pos = glGetUniformLocation(SSAO_prog.GetID(), "gNormal");
+	glUniform1i(sampler_pos, 1);
+	sampler_pos = glGetUniformLocation(SSAO_prog.GetID(), "texNoise");
+	glUniform1i(sampler_pos, 2);
 }
 
 void displayFunc()
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	drawScene();
 	glutSwapBuffers();
 }
@@ -200,7 +268,7 @@ int main(int argc, char** argv)
 	glutCreateWindow("CS 5610 Final");
 	
 	setupFuncs();
-	glClearColor(0, 0, 0, 0);
+	glClearColor(0, 1, 0, 1);
 
 	// GLEW Init
 	GLenum res = glewInit();
@@ -220,61 +288,60 @@ int main(int argc, char** argv)
 	teapot2 = new ObjDrawer("res/teapot.obj", false);
 	plane = new ObjDrawer("res/plane.obj", false);
 
-	// configure g-buffer framebuffer
-	// ------------------------------
-	
-	glGenFramebuffers(1, &gBuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
-	unsigned int gPosition, gNormal, gAlbedo;
-	// position color buffer
-	glGenTextures(1, &gPosition);
-	glBindTexture(GL_TEXTURE_2D, gPosition);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, scr_w, scr_h, 0, GL_RGBA, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
-	// normal color buffer
-	glGenTextures(1, &gNormal);
-	glBindTexture(GL_TEXTURE_2D, gNormal);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, scr_w, scr_h, 0, GL_RGBA, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
-	// color + specular color buffer
-	glGenTextures(1, &gAlbedo);
-	glBindTexture(GL_TEXTURE_2D, gAlbedo);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, scr_w, scr_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedo, 0);
-	// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-	unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-	glDrawBuffers(3, attachments);
-	// create and attach depth buffer (renderbuffer)
-	unsigned int rboDepth;
-	glGenRenderbuffers(1, &rboDepth);
-	glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, scr_w, scr_h);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
-	// finally check if framebuffer is complete
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		std::cout << "Framebuffer not complete!" << std::endl;
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// configure g-buffer
+	{
+		glGenFramebuffers(1, &gBuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+		// position color buffer
+		glGenTextures(1, &gPosition);
+		glBindTexture(GL_TEXTURE_2D, gPosition);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, scr_w, scr_h, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gPosition, 0);
+		// normal color buffer
+		glGenTextures(1, &gNormal);
+		glBindTexture(GL_TEXTURE_2D, gNormal);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, scr_w, scr_h, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, gNormal, 0);
+		// color + specular color buffer
+		glGenTextures(1, &gAlbedo);
+		glBindTexture(GL_TEXTURE_2D, gAlbedo);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, scr_w, scr_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, gAlbedo, 0);
+		// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+		unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+		glDrawBuffers(3, attachments);
+		// create and attach depth buffer (renderbuffer)
+		unsigned int rboDepth;
+		glGenRenderbuffers(1, &rboDepth);
+		glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, scr_w, scr_h);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+		// finally check if framebuffer is complete
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			std::cout << "Framebuffer not complete!" << std::endl;
+		glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+	}
 
 	// also create framebuffer to hold SSAO processing stage 
 	// -----------------------------------------------------
-	glGenFramebuffers(1, &ssaoFBO);  glGenFramebuffers(1, &ssaoBlurFBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
-	unsigned int ssaoColorBuffer, ssaoColorBufferBlur;
+	glGenFramebuffers(1, &ssaoFrameBuffer);  glGenFramebuffers(1, &ssaoBlurFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, ssaoFrameBuffer);
+	GLuint ssaoColorTex, ssaoColorBufferBlur;
 	// SSAO color buffer
-	glGenTextures(1, &ssaoColorBuffer);
-	glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer);
+	glGenTextures(1, &ssaoColorTex);
+	glBindTexture(GL_TEXTURE_2D, ssaoColorTex);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, scr_w, scr_h, 0, GL_RED, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBuffer, 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, ssaoColorTex, 0);
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "SSAO Framebuffer not complete!" << std::endl;
 	// and blur stage
@@ -293,7 +360,6 @@ int main(int argc, char** argv)
 	// ----------------------
 	std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
 	std::default_random_engine generator;
-	std::vector<glm::vec3> ssaoKernel;
 	for (unsigned int i = 0; i < 64; ++i)
 	{
 		glm::vec3 sample(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, randomFloats(generator));
@@ -303,7 +369,7 @@ int main(int argc, char** argv)
 
 		// scale samples s.t. they're more aligned to center of kernel
 		scale = lerp(0.1f, 1.0f, scale * scale);
-		sample *= scale;
+		sample *= scale; 
 		ssaoKernel.push_back(sample);
 	}
 
@@ -316,7 +382,7 @@ int main(int argc, char** argv)
 		ssaoNoise.push_back(noise);
 	}
 
-	unsigned int noiseTexture; glGenTextures(1, &noiseTexture);
+	glGenTextures(1, &noiseTexture);
 	glBindTexture(GL_TEXTURE_2D, noiseTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssaoNoise[0]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);

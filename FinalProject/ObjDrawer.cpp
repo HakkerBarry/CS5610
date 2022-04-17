@@ -102,6 +102,13 @@ void ObjDrawer::setPerspect(bool isPerspect)
 	this->isPerspect = isPerspect;
 }
 
+void ObjDrawer::setTexSample(char const* name, int sampler)
+{
+	glUseProgram(p_id);
+	GLint sampler_pos = glGetUniformLocation(p_id, name);
+	glUniform1i(sampler_pos, sampler);
+}
+
 void ObjDrawer::drawV()
 {
 	glUseProgram(p_id);

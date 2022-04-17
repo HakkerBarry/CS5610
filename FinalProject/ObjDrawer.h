@@ -34,6 +34,7 @@ public:
 	void drawV();
 	void setAttrib();
 	void setPerspect(bool isPerspect);
+	void setTexSample(char const* name, int sampler);
 	void draw(glm::mat4 v, glm::mat4 p);
 	void setPosition(glm::vec3 pos);
 	void setScale(glm::vec3 scale);
