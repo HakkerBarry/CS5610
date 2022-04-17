@@ -124,6 +124,8 @@ void drawScene() {
 			GLint sample_pos = glGetUniformLocation(SSAO_prog.GetID(), sample.c_str());
 			glUniform3fv(sample_pos, 1, glm::value_ptr(ssaoKernel[i]));
 		}
+		GLint p_pos = glGetUniformLocation(SSAO_prog.GetID(), "p");
+		glUniformMatrix4fv(p_pos, 1, GL_FALSE, glm::value_ptr(camera->getProj()));
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, gPosition);
 		glActiveTexture(GL_TEXTURE1);
