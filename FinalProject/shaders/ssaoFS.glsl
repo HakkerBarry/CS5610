@@ -1,5 +1,5 @@
 #version 330 core
-out vec4 FragColor;
+out float FragColor;
 
 in vec2 TexCoords;
 
@@ -9,19 +9,18 @@ uniform sampler2D texNoise;
 
 uniform vec3 samples[64];
 
-// parameters (you'd probably want to use them as uniforms to more easily tweak the effect)
 int kernelSize = 64;
-float radius = 0.5;
-float bias = 0.025;
+float radius = 0.6;
+float bias = 0.005;
 
-// tile noise texture over screen based on screen dimensions divided by noise size
+// How many noise in the screen
 const vec2 noiseScale = vec2(1920.0/4.0, 1080.0/4.0); 
 
 uniform mat4 p;
 
 void main()
 {
-    // get input for SSAO algorithm
+    // get data from texture
     vec3 fragPos = texture(gPosition, TexCoords).xyz;
     vec3 normal = normalize(texture(gNormal, TexCoords).rgb);
     vec3 randomVec = normalize(texture(texNoise, TexCoords * noiseScale).xyz);
@@ -33,13 +32,14 @@ void main()
     float occlusion = 0.0;
     for(int i = 0; i < kernelSize; ++i)
     {
+        // for each sample
         // get sample position
-        vec3 samplePos = TBN * samples[i]; // from tangent to view-space
+        vec3 samplePos = TBN * samples[i]; // from tangent to view space
         samplePos = fragPos + samplePos * radius; 
         
         // project sample position (to sample texture) (to get position on screen/texture)
         vec4 offset = vec4(samplePos, 1.0);
-        offset = p * offset; // from view to clip-space
+        offset = p * offset; // from view to clip space
         offset.xyz /= offset.w; // perspective divide
         offset.xyz = offset.xyz * 0.5 + 0.5; // transform to range 0.0 - 1.0
         
@@ -50,12 +50,14 @@ void main()
         float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth));
         occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;           
     }
+
+    // inverse and scale to 0 - 1
     occlusion = 1.0 - (occlusion / kernelSize);
     
-    //FragColor = occlusion
+    FragColor = occlusion;
 
     // for test
     //FragColor =  vec4(bitangent, 1);
-    FragColor = vec4(occlusion, occlusion, occlusion, 1);
+    //FragColor = vec4(occlusion, occlusion, occlusion, 1);
     //FragColor = vec4(1, 0, 0, 1);
 }

@@ -186,6 +186,7 @@ xcopy /y /d "$(SolutionDir)libs\glew-2.2.0\bin\Release\Win32\glew32.dll" "$(OutD
     <ClInclude Include="ObjDrawer.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\BlurFS.glsl" />
     <None Include="shaders\SimpleFS.glsl" />
     <None Include="shaders\SimpleVS.glsl" />
     <None Include="shaders\ssaoFS.glsl" />

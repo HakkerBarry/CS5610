@@ -64,10 +64,13 @@
     <None Include="shaders\ssao_geoFS.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\ssaoVS.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
     <None Include="shaders\ssaoFS.glsl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="shaders\ssaoVS.glsl">
+    <None Include="shaders\BlurFS.glsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

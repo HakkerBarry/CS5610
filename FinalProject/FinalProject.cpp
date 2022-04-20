@@ -24,6 +24,7 @@ Camera* camera;
 GLSLProgram SSAO_Geo_prog;
 GLSLProgram simple_prog;
 GLSLProgram SSAO_prog;
+GLSLProgram SSAO_Blur_prog;
 
 //Framebuffers
 GLuint gBuffer;
@@ -31,6 +32,7 @@ GLuint ssaoFrameBuffer, ssaoBlurFBO;
 
 // Textures
 GLuint gPosition, gNormal, gAlbedo;
+GLuint ssaoColorTex, ssaoColorBufferBlur;
 GLuint noiseTexture;
 GLuint rboDepth;
 
@@ -78,7 +80,6 @@ void renderQuad()
 		texc_loc = glGetAttribLocation(SSAO_prog.GetID(), "texc");
 		glVertexAttribPointer(texc_loc, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	}
-	glUseProgram(SSAO_prog.GetID());
 	glBindVertexArray(quadVAO);
 	glEnableVertexAttribArray(pos_loc);
 	glEnableVertexAttribArray(texc_loc);
@@ -105,18 +106,8 @@ void drawScene() {
 
 	// 2. generate SSAO texture
 	//	 ------------------------
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		 // test
-		 //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		 /*objDrawer->setProg(simple_prog.GetID());
-		 teapot2->setProg(simple_prog.GetID());
-		 plane->setProg(simple_prog.GetID());
-		 objDrawer->draw(camera->getView(), camera->getProj());
-		 teapot2->draw(camera->getView(), camera->getProj());
-		 plane->draw(camera->getView(), camera->getProj());*/
-
+	glBindFramebuffer(GL_FRAMEBUFFER, ssaoFrameBuffer);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(SSAO_prog.GetID());
 		// Send kernel + rotation 
 		for (unsigned int i = 0; i < 64; ++i) {
@@ -135,7 +126,13 @@ void drawScene() {
 		renderQuad();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glUseProgram(SSAO_Blur_prog.GetID());
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, ssaoColorTex);
+	renderQuad();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
 }
 
@@ -190,6 +187,23 @@ void initShaders() {
 	glUniform1i(sampler_pos, 1);
 	sampler_pos = glGetUniformLocation(SSAO_prog.GetID(), "texNoise");
 	glUniform1i(sampler_pos, 2);
+
+	GLSLShader SSAO_blur_vs, SSAO_blur_fs;
+	SSAO_Blur_prog.CreateProgram();
+	SSAO_blur_vs.CompileFile("shaders/ssaoVS.glsl", GL_VERTEX_SHADER);
+	SSAO_blur_fs.CompileFile("shaders/BlurFS.glsl", GL_FRAGMENT_SHADER);
+	SSAO_Blur_prog.AttachShader(SSAO_blur_vs);
+	SSAO_Blur_prog.AttachShader(SSAO_blur_fs);
+	SSAO_Blur_prog.Link();
+	glUseProgram(SSAO_Blur_prog.GetID());
+	sampler_pos = glGetUniformLocation(SSAO_Blur_prog.GetID(), "gPosition");
+	glUniform1i(sampler_pos, 0);
+	sampler_pos = glGetUniformLocation(SSAO_Blur_prog.GetID(), "gNormal");
+	glUniform1i(sampler_pos, 1);
+	sampler_pos = glGetUniformLocation(SSAO_Blur_prog.GetID(), "gAlbedo");
+	glUniform1i(sampler_pos, 2);
+	sampler_pos = glGetUniformLocation(SSAO_Blur_prog.GetID(), "ssaoInput");
+	glUniform1i(sampler_pos, 3);
 }
 
 void displayFunc()
@@ -311,7 +325,7 @@ int main(int argc, char** argv)
 	teapot2 = new ObjDrawer("res/teapot.obj", false);
 	plane = new ObjDrawer("res/plane.obj", false);
 
-	// configure g-buffer
+	// 1 configure g-buffer
 	{
 		glGenFramebuffers(1, &gBuffer);
 		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
@@ -352,11 +366,9 @@ int main(int argc, char** argv)
 		glBindFramebuffer(GL_FRAMEBUFFER, 0); 
 	}
 
-	// also create framebuffer to hold SSAO processing stage 
-	// -----------------------------------------------------
+	// 2 SSAO Geo FB & Tex ---------------------------------------------
 	glGenFramebuffers(1, &ssaoFrameBuffer);  glGenFramebuffers(1, &ssaoBlurFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, ssaoFrameBuffer);
-	GLuint ssaoColorTex, ssaoColorBufferBlur;
 	// SSAO color buffer
 	glGenTextures(1, &ssaoColorTex);
 	glBindTexture(GL_TEXTURE_2D, ssaoColorTex);
@@ -366,7 +378,8 @@ int main(int argc, char** argv)
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, ssaoColorTex, 0);
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "SSAO Framebuffer not complete!" << std::endl;
-	// and blur stage
+
+	// 3 blur FB & Tex ---------------------------------------------
 	glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFBO);
 	glGenTextures(1, &ssaoColorBufferBlur);
 	glBindTexture(GL_TEXTURE_2D, ssaoColorBufferBlur);
