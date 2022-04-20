@@ -18,7 +18,11 @@ using namespace cy;
 
 bool flightMode, gBufferMode;
 int prevX, prevY;
-ObjDrawer* objDrawer, *plane, *teapot2;
+float radius = 2;
+float angle = 0;
+int teapot_num = 8;
+std::vector<ObjDrawer*> Scene;
+//ObjDrawer* objDrawer, *plane, *teapot2;
 Camera* camera;
 
 GLSLProgram SSAO_Geo_prog;
@@ -89,19 +93,24 @@ void renderQuad()
 	glBindVertexArray(0);
 }
 
+void updateTeapot() {
+	for (int i = 0; i < teapot_num; i++) {
+		auto o = Scene[i];
+		o->setPosition(glm::normalize(glm::vec3(glm::sin(glm::radians(i * 360 / (float)teapot_num)), 0, glm::cos(glm::radians(i * 360 / (float)teapot_num)))) * radius);
+		o->setScale(glm::vec3(.05f, .05f, .05f));
+		o->setRotation(glm::vec3(-90, 0, (i * 360 / teapot_num) + angle));
+	}
+}
+
 void drawScene() {
 	// geo step
 	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		objDrawer->setProg(SSAO_Geo_prog.GetID());
-		teapot2->setProg(SSAO_Geo_prog.GetID());
-		plane->setProg(SSAO_Geo_prog.GetID());
-		objDrawer->setAttrib();
-		teapot2->setAttrib();
-		plane->setAttrib();
-		objDrawer->draw(camera->getView(), camera->getProj());
-		teapot2->draw(camera->getView(), camera->getProj());
-		plane->draw(camera->getView(), camera->getProj());
+		for (auto obj : Scene) {
+			obj->setProg(SSAO_Geo_prog.GetID());
+			obj->setAttrib();
+			obj->draw(camera->getView(), camera->getProj());
+		}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// 2. generate SSAO texture
@@ -138,21 +147,21 @@ void drawScene() {
 
 void initScene() {
 	// Setup model-----------------------------------------
-	objDrawer->setProg(simple_prog.GetID());
-	objDrawer->setAttrib();
-	objDrawer->setPosition(glm::vec3(0, 0, 0));
-	objDrawer->setScale(glm::vec3(.05f, .05f, .05f));
-	objDrawer->setRotation(glm::vec3(-90, 0, -45));
-
-	teapot2->setProg(simple_prog.GetID());
-	teapot2->setAttrib();
-	teapot2->setPosition(glm::vec3(1, 0, 0));
-	teapot2->setScale(glm::vec3(.05f, .05f, .05f));
-
+	for (int i = 0; i < teapot_num; i++) {
+		ObjDrawer* o = new ObjDrawer("res/teapot.obj", false);
+		o->setProg(simple_prog.GetID());
+		o->setAttrib();
+		o->setPosition(glm::normalize(glm::vec3(glm::sin(glm::radians(i * 360/(float)teapot_num)), 0, glm::cos(glm::radians(i * 360/ (float)teapot_num)))) * radius);
+		o->setScale(glm::vec3(.05f, .05f, .05f));
+		o->setRotation(glm::vec3(-90, 0, i * 360 / teapot_num));
+		Scene.push_back(o);
+	}
+	ObjDrawer* plane = new ObjDrawer("res/plane.obj", false);
 	plane->setProg(simple_prog.GetID());
 	plane->setAttrib();
 	plane->setPosition(glm::vec3(0, 0, 0));
 	plane->setScale(glm::vec3(1.f, 1.f, 1.f));
+	Scene.push_back(plane);
 }
 
 void initShaders() {
@@ -268,6 +277,29 @@ void specialFunc(int key, int x, int y) {
 	//if (key == GLUT_KEY_F2) {
 	//	gBufferMode = !gBufferMode;
 	//}
+
+	switch (key) {
+	case GLUT_KEY_LEFT:
+		radius -= 0.2;
+		updateTeapot();
+		displayFunc();
+		break;
+	case GLUT_KEY_RIGHT:
+		radius += 0.2;
+		updateTeapot();
+		displayFunc();
+		break;
+	case GLUT_KEY_UP:
+		angle += 5;
+		updateTeapot();
+		displayFunc();
+		break;
+	case GLUT_KEY_DOWN:
+		angle -= 5;
+		updateTeapot();
+		displayFunc();
+		break;
+	}
 }
 
 void idleFunc()
@@ -319,11 +351,6 @@ int main(int argc, char** argv)
 
 	// Setup Camera
 	camera = new Camera(glm::vec3(-0.969084, 1.74454, -0.762535), glm::vec3(-50.6, 40.6, 0), 45.f, scr_w, scr_h);
-
-	// Load Mesh
-	objDrawer = new ObjDrawer("res/teapot.obj", false);
-	teapot2 = new ObjDrawer("res/teapot.obj", false);
-	plane = new ObjDrawer("res/plane.obj", false);
 
 	// 1 configure g-buffer
 	{
