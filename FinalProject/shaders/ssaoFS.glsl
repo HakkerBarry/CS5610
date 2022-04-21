@@ -33,14 +33,14 @@ void main()
     float occlusion = 0.0;
     for(int i = 0; i < kernelSize; ++i)
     {
-        // get sample position in view space
-        vec3 samplePos = TBN * samples[i]; // reletive distance from tangent to view space
+        // reletive distance from tangent to view space
+        vec3 samplePos = TBN * samples[i]; 
+        // get sample position in view space 
         samplePos = fragPos + samplePos * radius; 
         
-
         vec4 offset = vec4(samplePos, 1.0);
         offset = p * offset;
-        offset.xyz /= offset.w; // perspective divide
+        offset.xyz /= offset.w;
         offset.xyz = offset.xyz * 0.5 + 0.5;
         
         // get sample depth

@@ -16,7 +16,7 @@ Zixuan Zhang Final Project for CS5610 at the UofU
 
 using namespace cy;
 
-bool flightMode, gBufferMode;
+bool flightMode, gBufferMode, ssaoOn;
 int prevX, prevY;
 float radius = 2;
 float angle = 0;
@@ -147,6 +147,8 @@ void drawScene() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(blinn_prog.GetID());
+	GLuint ssaoOn_loc = glGetUniformLocation(blinn_prog.GetID(), "ssaoOn");
+	glUniform1i(ssaoOn_loc, ssaoOn);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, gPosition);
 	glActiveTexture(GL_TEXTURE1);
@@ -305,9 +307,11 @@ void specialFunc(int key, int x, int y) {
 	if (key == GLUT_KEY_F1) {
 		flightMode = !flightMode;
 	}
-	//if (key == GLUT_KEY_F2) {
-	//	gBufferMode = !gBufferMode;
-	//}
+	if (key == GLUT_KEY_F2) {
+		ssaoOn = !ssaoOn;
+		updateTeapot();
+		displayFunc();
+	}
 
 	switch (key) {
 	case GLUT_KEY_LEFT:
