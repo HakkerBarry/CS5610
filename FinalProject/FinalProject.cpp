@@ -29,6 +29,7 @@ GLSLProgram SSAO_Geo_prog;
 GLSLProgram simple_prog;
 GLSLProgram SSAO_prog;
 GLSLProgram SSAO_Blur_prog;
+GLSLProgram blinn_prog;
 
 //Framebuffers
 GLuint gBuffer;
@@ -36,7 +37,7 @@ GLuint ssaoFrameBuffer, ssaoBlurFBO;
 
 // Textures
 GLuint gPosition, gNormal, gAlbedo;
-GLuint ssaoColorTex, ssaoColorBufferBlur;
+GLuint ssaoColorTex, ssaoTex;
 GLuint noiseTexture;
 GLuint rboDepth;
 
@@ -133,15 +134,28 @@ void drawScene() {
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, noiseTexture);
 		renderQuad();
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFBO);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFBO);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(SSAO_Blur_prog.GetID());
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, ssaoColorTex);
 	renderQuad();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glUseProgram(blinn_prog.GetID());
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, gPosition);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, gNormal);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, gAlbedo);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, ssaoTex);
+	renderQuad();
 	
 }
 
@@ -212,6 +226,23 @@ void initShaders() {
 	sampler_pos = glGetUniformLocation(SSAO_Blur_prog.GetID(), "gAlbedo");
 	glUniform1i(sampler_pos, 2);
 	sampler_pos = glGetUniformLocation(SSAO_Blur_prog.GetID(), "ssaoInput");
+	glUniform1i(sampler_pos, 3);
+
+	GLSLShader blinn_vs, blinn_fs;
+	blinn_prog.CreateProgram();
+	blinn_vs.CompileFile("shaders/ssaoVS.glsl", GL_VERTEX_SHADER);
+	blinn_fs.CompileFile("shaders/blinnFS.glsl", GL_FRAGMENT_SHADER);
+	blinn_prog.AttachShader(blinn_vs);
+	blinn_prog.AttachShader(blinn_fs);
+	blinn_prog.Link();
+	glUseProgram(blinn_prog.GetID());
+	sampler_pos = glGetUniformLocation(blinn_prog.GetID(), "gPosition");
+	glUniform1i(sampler_pos, 0);
+	sampler_pos = glGetUniformLocation(blinn_prog.GetID(), "gNormal");
+	glUniform1i(sampler_pos, 1);
+	sampler_pos = glGetUniformLocation(blinn_prog.GetID(), "gAlbedo");
+	glUniform1i(sampler_pos, 2);
+	sampler_pos = glGetUniformLocation(blinn_prog.GetID(), "ssao");
 	glUniform1i(sampler_pos, 3);
 }
 
@@ -334,7 +365,7 @@ int main(int argc, char** argv)
 	glutInitWindowSize(scr_w, scr_h);
 	glutInitWindowPosition(100, 100);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-	glutCreateWindow("CS 5610 Final");
+	glutCreateWindow("CS 5610 Final Project");
 	
 	setupFuncs();
 	glClearColor(0, 1, 0, 1);
@@ -408,18 +439,17 @@ int main(int argc, char** argv)
 
 	// 3 blur FB & Tex ---------------------------------------------
 	glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFBO);
-	glGenTextures(1, &ssaoColorBufferBlur);
-	glBindTexture(GL_TEXTURE_2D, ssaoColorBufferBlur);
+	glGenTextures(1, &ssaoTex);
+	glBindTexture(GL_TEXTURE_2D, ssaoTex);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, scr_w, scr_h, 0, GL_RED, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBufferBlur, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoTex, 0);
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "SSAO Blur Framebuffer not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	// generate sample kernel
-	// ----------------------
+	// generate random samples --------------------------------------
 	std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
 	std::default_random_engine generator;
 	for (unsigned int i = 0; i < 64; ++i)
@@ -429,14 +459,13 @@ int main(int argc, char** argv)
 		sample *= randomFloats(generator);
 		float scale = float(i) / 64.0f;
 
-		// scale samples s.t. they're more aligned to center of kernel
+		// scale samples
 		scale = lerp(0.1f, 1.0f, scale * scale);
 		sample *= scale; 
 		ssaoKernel.push_back(sample);
 	}
 
-	// generate noise texture
-	// ----------------------
+	// generate a 4 x 4 noise texture
 	std::vector<glm::vec3> ssaoNoise;
 	for (unsigned int i = 0; i < 16; i++)
 	{
