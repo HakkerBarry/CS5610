@@ -20,9 +20,9 @@ void main()
 
     // Const
     vec3 lightDir = normalize(vec3(1, 1, 1));
-    vec3 objectColor = vec3(0.5, 0.3, 0.3);
-    vec3 specColor = vec3(1, 1, 1);
-    vec3 ambColor = vec3(0.2, 0.1, 0.1);
+    vec3 objectColor = vec3(0.7, 0.7, 0.7);
+    vec3 specColor = vec3(.9, .9, .9);
+    vec3 ambColor = vec3(0.3, 0.3, 0.3);
 
     vec3 camDir  = normalize(-FragPos);
 
